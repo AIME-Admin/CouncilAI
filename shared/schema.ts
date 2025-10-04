@@ -67,11 +67,31 @@ export const askResponseSchema = z.object({
 
 export type AskResponse = z.infer<typeof askResponseSchema>;
 
-// Database tables
+export type User = typeof users.$inferSelect;
+export type UpsertUser = Partial<typeof users.$inferInsert>;
+
+// Database tables - sessions table for Replit Auth
+export const sessions = pgTable(
+  "sessions",
+  {
+    sid: varchar("sid").primaryKey(),
+    sess: jsonb("sess").notNull(),
+    expire: timestamp("expire").notNull(),
+  },
+  (table) => [{ indexName: "IDX_session_expire", columns: [table.expire] }]
+);
+
+// Users table
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
-  username: varchar("username", { length: 255 }).notNull().unique(),
+  replitId: varchar("replit_id", { length: 255 }).unique(),
+  username: varchar("username", { length: 255 }),
+  email: varchar("email", { length: 255 }),
+  firstName: varchar("first_name", { length: 255 }),
+  lastName: varchar("last_name", { length: 255 }),
+  profileImageUrl: varchar("profile_image_url"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow(),
 });
 
 export const queries = pgTable("queries", {

@@ -99,13 +99,12 @@ Response:
 - **Tabs**: Horizontal navigation with sliding primary border indicator
 
 ## Recent Changes
-- **2025-01-04**: Complete MVP implementation
-  - All frontend components with exceptional design quality
-  - Four AI model adapters (GPT-5, Claude, Gemini, Perplexity) with timeout handling
-  - Cross-critique logic with fallback for partial results
-  - Robust synthesis engine with proper confidence scoring
-  - Defensive frontend rendering to handle partial/missing data
-  - Full error handling and graceful degradation
+- **2025-01-04**: Complete MVP + Next Phase Features
+  - **Core MVP**: Full consensus engine with 4 AI models, cross-critique, and synthesis
+  - **WebSocket Streaming**: Real-time progress updates with message buffering
+  - **Database & Caching**: PostgreSQL with SHA-256-based query caching
+  - **Auth Integration**: Replit Auth setup (sessions table ready)
+  - **Remaining**: User auth flow, query history, analytics dashboard, model customization
 
 ## Environment Variables
 - `OPENAI_API_KEY`: GPT-5 access
