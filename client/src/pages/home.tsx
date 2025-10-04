@@ -141,7 +141,7 @@ export default function Home() {
                   data-testid="tab-dissent"
                 >
                   Dissent
-                  {result.synthesis.dissent.length > 0 && (
+                  {(result.synthesis?.dissent?.length ?? 0) > 0 && (
                     <Badge variant="destructive" className="ml-2">
                       {result.synthesis.dissent.length}
                     </Badge>
@@ -156,11 +156,11 @@ export default function Home() {
                       <div className="flex-1 space-y-2">
                         <CardTitle className="text-2xl">Consensus Answer</CardTitle>
                         <div className="flex items-center gap-2 flex-wrap">
-                          {result.drafts.map((draft) => (
+                          {(result.drafts ?? []).map((draft) => (
                             <ModelAvatar key={draft.agent} model={draft.agent} size="sm" active />
                           ))}
                           <span className="text-sm text-muted-foreground ml-2">
-                            {result.drafts.length} models in agreement
+                            {(result.drafts ?? []).length} models in agreement
                           </span>
                         </div>
                       </div>
@@ -174,11 +174,11 @@ export default function Home() {
                       </p>
                     </div>
 
-                    {result.synthesis.citations.length > 0 && (
+                    {(result.synthesis?.citations?.length ?? 0) > 0 && (
                       <div className="space-y-3">
                         <h3 className="text-sm font-semibold text-foreground">Citations</h3>
                         <div className="flex flex-wrap gap-2">
-                          {result.synthesis.citations.map((citation, idx) => (
+                          {(result.synthesis?.citations ?? []).map((citation, idx) => (
                             <a
                               key={idx}
                               href={citation}
@@ -207,7 +207,7 @@ export default function Home() {
                     </p>
                   </CardHeader>
                   <CardContent className="space-y-4">
-                    {result.synthesis.decision_log.map((decision, idx) => {
+                    {(result.synthesis?.decision_log ?? []).map((decision, idx) => {
                       const isKept = decision.toLowerCase().includes("kept") || decision.toLowerCase().includes("included") || decision.toLowerCase().includes("agreed");
                       return (
                         <div
@@ -227,13 +227,13 @@ export default function Home() {
                   </CardContent>
                 </Card>
 
-                {result.synthesis.citations.length > 0 && (
+                {(result.synthesis?.citations?.length ?? 0) > 0 && (
                   <Card>
                     <CardHeader>
                       <CardTitle>All Citations</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-2">
-                      {result.synthesis.citations.map((citation, idx) => (
+                      {(result.synthesis?.citations ?? []).map((citation, idx) => (
                         <a
                           key={idx}
                           href={citation}
@@ -254,7 +254,7 @@ export default function Home() {
               </TabsContent>
 
               <TabsContent value="dissent" className="mt-6 space-y-6">
-                {result.synthesis.dissent.length === 0 ? (
+                {(result.synthesis?.dissent?.length ?? 0) === 0 ? (
                   <Card>
                     <CardContent className="p-12 text-center space-y-4">
                       <Check className="w-16 h-16 text-chart-2 mx-auto" />
@@ -284,7 +284,7 @@ export default function Home() {
                       </CardContent>
                     </Card>
 
-                    {result.synthesis.dissent.map((dissent, idx) => (
+                    {(result.synthesis?.dissent ?? []).map((dissent, idx) => (
                       <Card key={idx} className="border-chart-4/30" data-testid={`dissent-${idx}`}>
                         <CardHeader>
                           <div className="flex items-start justify-between gap-4">
