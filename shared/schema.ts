@@ -1,18 +1,67 @@
-import { sql } from "drizzle-orm";
-import { pgTable, text, varchar } from "drizzle-orm/pg-core";
-import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
-export const users = pgTable("users", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  username: text("username").notNull().unique(),
-  password: text("password").notNull(),
+// AI Model Types
+export type AIModel = "gpt5" | "claude" | "gemini" | "perplexity";
+
+// Claim structure for individual model responses
+export const claimSchema = z.object({
+  text: z.string(),
+  support: z.array(z.string()),
 });
 
-export const insertUserSchema = createInsertSchema(users).pick({
-  username: true,
-  password: true,
+export type Claim = z.infer<typeof claimSchema>;
+
+// Draft response from each AI model
+export const draftResponseSchema = z.object({
+  agent: z.enum(["gpt5", "claude", "gemini", "perplexity"]),
+  claims: z.array(claimSchema),
+  confidence: z.number().min(0).max(1),
 });
 
-export type InsertUser = z.infer<typeof insertUserSchema>;
-export type User = typeof users.$inferSelect;
+export type DraftResponse = z.infer<typeof draftResponseSchema>;
+
+// Critique feedback from one model about another
+export const critiqueSchema = z.object({
+  reviewer: z.enum(["gpt5", "claude", "gemini", "perplexity"]),
+  target: z.enum(["gpt5", "claude", "gemini", "perplexity"]),
+  issues: z.array(z.string()),
+});
+
+export type Critique = z.infer<typeof critiqueSchema>;
+
+// Dissent point showing disagreement
+export const dissentSchema = z.object({
+  point: z.string(),
+  who: z.array(z.enum(["gpt5", "claude", "gemini", "perplexity"])),
+});
+
+export type Dissent = z.infer<typeof dissentSchema>;
+
+// Final synthesis result
+export const synthesisSchema = z.object({
+  summary: z.string(),
+  confidence: z.number().min(0).max(1),
+  citations: z.array(z.string()),
+  decision_log: z.array(z.string()),
+  dissent: z.array(dissentSchema),
+});
+
+export type Synthesis = z.infer<typeof synthesisSchema>;
+
+// Request/Response types
+export const askRequestSchema = z.object({
+  question: z.string().min(1, "Question is required"),
+});
+
+export type AskRequest = z.infer<typeof askRequestSchema>;
+
+export const askResponseSchema = z.object({
+  synthesis: synthesisSchema,
+  drafts: z.array(draftResponseSchema),
+  critiques: z.array(critiqueSchema),
+  processing_time_ms: z.number(),
+  timestamp: z.string(),
+  query_id: z.string(),
+});
+
+export type AskResponse = z.infer<typeof askResponseSchema>;
