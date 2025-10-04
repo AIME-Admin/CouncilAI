@@ -1,0 +1,122 @@
+You are an expert full-stack engineer. Build the MVP for a web app called Council — a “four-LLM consensus engine.”
+The app receives a single question from a user, queries 4 language models (GPT-5, Claude, Gemini, and Perplexity), compares their answers, performs a short cross-critique, and returns one synthesized, auditable answer with citations and a confidence score.
+
+Goal
+
+Create a working prototype in Node.js using Express (for the backend API) and a minimal HTML/CSS/JS frontend served from the same server. Keep all logic self-contained for now (no external DB).
+The output must run on Replit without extra setup.
+
+Core Features
+
+Endpoint: /ask (POST) — accepts { question: string }.
+
+Adapters: functions for each model (GPT-5, Claude, Gemini, Perplexity) that call mock APIs using fetch() with placeholders for API keys.
+
+Draft Phase: all 4 adapters return structured JSON:
+
+{ "agent":"gpt5", "claims":[{"text":"...", "support":["url1","url2"]}], "confidence":0.7 }
+
+
+Cross-Critique: each model reviews the others’ drafts and flags factual or logical issues.
+
+Synthesis: a supervisor() function merges drafts, weighs agreement, penalizes conflicts, and creates:
+
+{
+  "summary":"final answer",
+  "confidence":0.82,
+  "citations":["url1","url2"],
+  "decision_log":["kept claim X","dropped claim Y"],
+  "dissent":[{"point":"...","who":["gemini","claude"]}]
+}
+
+
+Frontend:
+
+A single page (index.html) with a text input, “Ask” button, and three result tabs: Answer, Receipts, Dissent.
+
+Call /ask via fetch(), render JSON output nicely.
+
+Environment variables: store fake API keys as process.env.GPT5_KEY, etc.
+
+Console logging: show each phase (drafts, critiques, synthesis) in server logs for debugging.
+
+Styling: basic Tailwind or inline CSS; dark theme, modern UI.
+
+Optional: compute average latency and token cost per query (mock values).
+
+File Structure
+/src
+  orchestrator.js      # handles route /ask
+  agents/
+    gpt5.js
+    claude.js
+    gemini.js
+    perplexity.js
+  supervisor.js
+  critique.js
+  utils.js
+index.js               # Express server
+public/
+  index.html
+  style.css
+  script.js
+.env
+
+Technical Notes
+
+Use ESM modules ("type": "module" in package.json).
+
+Include node-fetch for API calls.
+
+Use async/await with proper error handling and timeouts.
+
+For now, mock external API calls with Promise.resolve() + fake content.
+
+The supervisor should compute a weighted average of confidences and agreement.
+
+Return results as JSON to the frontend.
+
+The frontend must display:
+
+Final summary paragraph
+
+Confidence score (0–1)
+
+List of citations
+
+Decision log (why some claims were dropped)
+
+Dissent points
+
+Output expectations
+
+A complete, runnable Node project scaffolded in Replit.
+
+Example fake outputs proving pipeline works.
+
+Clear comments explaining where to plug real API calls later.
+
+A ready endpoint POST /ask returning the full synthesis JSON.
+
+Simple HTML frontend that posts to the API and displays results.
+
+Style & Tone
+
+Code should be clear, commented, and production-readable. Avoid unnecessary frameworks. Print logs like:
+
+[Council] Starting query…
+[Council] Drafts collected.
+[Council] Cross-critique complete.
+[Council] Synthesis ready. Confidence: 0.82
+
+Deliverables
+
+index.js Express server
+
+src/orchestrator.js, src/supervisor.js, src/agents/*.js
+
+public/index.html + style.css + script.js
+
+Working /ask endpoint returning mock consensus answer
+
+Instructions in comments for integrating real APIs later\n\n> End of prompt"}
