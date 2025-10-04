@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { pgTable, text, serial, varchar, timestamp, jsonb, real, integer } from "drizzle-orm/pg-core";
 
 // AI Model Types
 export type AIModel = "gpt5" | "claude" | "gemini" | "perplexity";
@@ -65,3 +66,28 @@ export const askResponseSchema = z.object({
 });
 
 export type AskResponse = z.infer<typeof askResponseSchema>;
+
+// Database tables
+export const users = pgTable("users", {
+  id: serial("id").primaryKey(),
+  username: varchar("username", { length: 255 }).notNull().unique(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const queries = pgTable("queries", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id),
+  questionHash: varchar("question_hash", { length: 64 }).notNull(),
+  question: text("question").notNull(),
+  responseData: jsonb("response_data").notNull(),
+  confidence: real("confidence").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const userPreferences = pgTable("user_preferences", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id).notNull().unique(),
+  modelWeights: jsonb("model_weights").notNull().default('{"gpt5": 1, "claude": 1, "gemini": 1, "perplexity": 1}'),
+  enabledModels: jsonb("enabled_models").notNull().default('["gpt5", "claude", "gemini", "perplexity"]'),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});

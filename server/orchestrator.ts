@@ -5,6 +5,7 @@ import * as gemini from "./agents/gemini";
 import * as perplexity from "./agents/perplexity";
 import { synthesize } from "./supervisor";
 import { type DraftResponse, type Critique, type AskResponse } from "@shared/schema";
+import { sendStreamMessage } from "./websocket";
 
 function withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise<T> {
   return Promise.race([
@@ -15,40 +16,73 @@ function withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise
   ]);
 }
 
-export async function processQuestion(question: string): Promise<AskResponse> {
+export async function processQuestion(question: string, streamQueryId?: string): Promise<AskResponse> {
   const startTime = Date.now();
-  const queryId = randomUUID();
+  const queryId = streamQueryId || randomUUID();
 
   console.log(`[Council] Starting query ${queryId.slice(0, 8)}...`);
   console.log(`[Council] Question: "${question}"`);
 
+  if (streamQueryId) {
+    sendStreamMessage(queryId, {
+      type: "draft",
+      phase: "Starting draft collection from 4 AI models...",
+    });
+  }
+
   console.log("[Council] Phase 1: Collecting drafts from all models...");
   
-  const draftPromises = [
-    withTimeout(gpt5.getDraft(question), 30000, "gpt5"),
-    withTimeout(claude.getDraft(question), 30000, "claude"),
-    withTimeout(gemini.getDraft(question), 30000, "gemini"),
-    withTimeout(perplexity.getDraft(question), 30000, "perplexity"),
-  ];
-
-  const draftResults = await Promise.allSettled(draftPromises);
+  const modelNames = ["gpt5", "claude", "gemini", "perplexity"];
+  const draftFunctions = [gpt5.getDraft, claude.getDraft, gemini.getDraft, perplexity.getDraft];
+  
   const drafts: DraftResponse[] = [];
   
-  for (let i = 0; i < draftResults.length; i++) {
-    const result = draftResults[i];
-    if (result.status === "fulfilled") {
-      drafts.push(result.value);
-    } else {
-      const modelName = ["gpt5", "claude", "gemini", "perplexity"][i];
-      console.error(`[Council] ${modelName} draft failed:`, result.reason);
+  const draftPromises = draftFunctions.map(async (getDraft, index) => {
+    try {
+      const modelName = modelNames[index];
+      const draft = await withTimeout(getDraft(question), 30000, modelName);
+      drafts.push(draft);
+      
+      if (streamQueryId) {
+        sendStreamMessage(queryId, {
+          type: "draft",
+          agent: draft.agent,
+          data: draft,
+          phase: `${modelName} draft complete`,
+        });
+      }
+      
+      return draft;
+    } catch (error) {
+      const modelName = modelNames[index];
+      console.error(`[Council] ${modelName} draft failed:`, error);
+      
+      if (streamQueryId) {
+        sendStreamMessage(queryId, {
+          type: "error",
+          agent: modelName,
+          message: `${modelName} failed to respond`,
+        });
+      }
+      
+      return null;
     }
-  }
+  });
+
+  await Promise.all(draftPromises);
   
   if (drafts.length === 0) {
     throw new Error("All AI models failed to respond. Please try again later.");
   }
   
   console.log(`[Council] Drafts collected from ${drafts.length}/4 models.`);
+
+  if (streamQueryId) {
+    sendStreamMessage(queryId, {
+      type: "critique",
+      phase: "Starting cross-critique phase...",
+    });
+  }
 
   console.log("[Council] Phase 2: Cross-critique...");
   const critiquePromises: Promise<Critique>[] = [];
@@ -88,13 +122,28 @@ export async function processQuestion(question: string): Promise<AskResponse> {
   
   console.log(`[Council] Cross-critique complete. ${critiques.filter(c => c.issues.length > 0).length} critiques with issues.`);
 
+  if (streamQueryId) {
+    sendStreamMessage(queryId, {
+      type: "synthesis",
+      phase: "Synthesizing consensus...",
+    });
+  }
+
   console.log("[Council] Phase 3: Synthesis...");
   const synthesis = synthesize(question, drafts, critiques);
   console.log(`[Council] Synthesis ready. Confidence: ${(synthesis.confidence * 100).toFixed(0)}%`);
+  
+  if (streamQueryId) {
+    sendStreamMessage(queryId, {
+      type: "synthesis",
+      data: synthesis,
+      phase: "Synthesis complete",
+    });
+  }
 
   const processingTime = Date.now() - startTime;
 
-  return {
+  const response: AskResponse = {
     synthesis,
     drafts,
     critiques,
@@ -102,4 +151,13 @@ export async function processQuestion(question: string): Promise<AskResponse> {
     timestamp: new Date().toISOString(),
     query_id: queryId,
   };
+
+  if (streamQueryId) {
+    sendStreamMessage(queryId, {
+      type: "complete",
+      data: response,
+    });
+  }
+
+  return response;
 }
