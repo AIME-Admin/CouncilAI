@@ -1,5 +1,7 @@
 import { z } from "zod";
-import { pgTable, text, serial, varchar, timestamp, jsonb, real, integer } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
+import { pgTable, text, serial, varchar, timestamp, jsonb, real, integer, boolean, index } from "drizzle-orm/pg-core";
+import { createInsertSchema } from "drizzle-zod";
 
 // AI Model Types
 export type AIModel = "gpt5" | "claude" | "gemini" | "perplexity";
@@ -67,9 +69,6 @@ export const askResponseSchema = z.object({
 
 export type AskResponse = z.infer<typeof askResponseSchema>;
 
-export type User = typeof users.$inferSelect;
-export type UpsertUser = Partial<typeof users.$inferInsert>;
-
 // Database tables - sessions table for Replit Auth
 export const sessions = pgTable(
   "sessions",
@@ -78,10 +77,10 @@ export const sessions = pgTable(
     sess: jsonb("sess").notNull(),
     expire: timestamp("expire").notNull(),
   },
-  (table) => [{ indexName: "IDX_session_expire", columns: [table.expire] }]
+  (table) => [index("IDX_session_expire").on(table.expire)]
 );
 
-// Users table
+// Users table with monetization fields
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
   replitId: varchar("replit_id", { length: 255 }).unique(),
@@ -90,6 +89,11 @@ export const users = pgTable("users", {
   firstName: varchar("first_name", { length: 255 }),
   lastName: varchar("last_name", { length: 255 }),
   profileImageUrl: varchar("profile_image_url"),
+  planTier: varchar("plan_tier", { length: 50 }).notNull().default("free"),
+  queriesUsed: integer("queries_used").notNull().default(0),
+  quotaRemaining: integer("quota_remaining").notNull().default(10),
+  billingCycleStart: timestamp("billing_cycle_start").defaultNow(),
+  stripeCustomerId: varchar("stripe_customer_id", { length: 255 }),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -111,3 +115,61 @@ export const userPreferences = pgTable("user_preferences", {
   enabledModels: jsonb("enabled_models").notNull().default('["gpt5", "claude", "gemini", "perplexity"]'),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
+
+// Subscriptions table for Stripe integration
+export const subscriptions = pgTable("subscriptions", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id).notNull(),
+  stripeSubscriptionId: varchar("stripe_subscription_id", { length: 255 }).unique(),
+  stripePriceId: varchar("stripe_price_id", { length: 255 }),
+  status: varchar("status", { length: 50 }).notNull(),
+  planTier: varchar("plan_tier", { length: 50 }).notNull(),
+  currentPeriodStart: timestamp("current_period_start"),
+  currentPeriodEnd: timestamp("current_period_end"),
+  cancelAtPeriodEnd: boolean("cancel_at_period_end").notNull().default(false),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Select types
+export type User = typeof users.$inferSelect;
+export type Query = typeof queries.$inferSelect;
+export type UserPreferences = typeof userPreferences.$inferSelect;
+export type Subscription = typeof subscriptions.$inferSelect;
+
+// Insert and select schemas
+export const insertUserSchema = createInsertSchema(users).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type InsertUser = z.infer<typeof insertUserSchema>;
+
+export const insertQuerySchema = createInsertSchema(queries).omit({
+  id: true,
+  createdAt: true,
+});
+export type InsertQuery = z.infer<typeof insertQuerySchema>;
+
+export const insertUserPreferencesSchema = createInsertSchema(userPreferences).omit({
+  id: true,
+  updatedAt: true,
+});
+export type InsertUserPreferences = z.infer<typeof insertUserPreferencesSchema>;
+
+export const insertSubscriptionSchema = createInsertSchema(subscriptions).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type InsertSubscription = z.infer<typeof insertSubscriptionSchema>;
+
+// Plan configurations
+export const PLAN_CONFIG = {
+  free: { name: "Free", queries: 10, price: 0 },
+  basic: { name: "Basic", queries: 100, price: 19 },
+  pro: { name: "Pro", queries: 500, price: 49 },
+  team: { name: "Team", queries: 2000, price: 99 },
+} as const;
+
+export type PlanTier = keyof typeof PLAN_CONFIG;
