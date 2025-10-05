@@ -1,9 +1,9 @@
-// Council Home Page - Fixed synthesis optional chaining
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
 import { Sparkles, ExternalLink, Check, X, AlertTriangle, Clock, Hash } from "lucide-react";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -16,6 +16,7 @@ import { askRequestSchema, type AskRequest, type AskResponse } from "@shared/sch
 import { apiRequest } from "@/lib/queryClient";
 
 export default function Home() {
+  const { t } = useLanguage();
   const [result, setResult] = useState<AskResponse | null>(null);
 
   const form = useForm<AskRequest>({
@@ -60,10 +61,10 @@ export default function Home() {
           </div>
           <div className="space-y-3">
             <p className="text-xl md:text-2xl font-semibold text-foreground max-w-3xl mx-auto">
-              Get consensus answers from 4 leading AI models
+              {t.home.title}
             </p>
             <p className="text-base text-muted-foreground max-w-2xl mx-auto">
-              Transparent decision-making powered by GPT-5, Claude, Gemini, and Perplexity
+              {t.home.subtitle}
             </p>
           </div>
           <div className="flex items-center justify-center gap-3 pt-2">
@@ -73,7 +74,7 @@ export default function Home() {
               onClick={() => window.location.href = "/upgrade"}
               data-testid="button-view-pricing"
             >
-              View Pricing
+              {t.home.viewPricing}
             </Button>
             <Button
               size="lg"
@@ -85,7 +86,7 @@ export default function Home() {
               }}
               data-testid="button-try-now"
             >
-              Try Now
+              {t.home.tryNow}
             </Button>
           </div>
         </header>
@@ -96,7 +97,7 @@ export default function Home() {
               <div className="relative">
                 <Textarea
                   {...form.register("question")}
-                  placeholder="Ask a question to get consensus from GPT-5, Claude, Gemini, and Perplexity..."
+                  placeholder={t.home.placeholder}
                   className="min-h-32 text-base resize-none border-2 focus:border-primary transition-all"
                   data-testid="input-question"
                 />
@@ -108,7 +109,7 @@ export default function Home() {
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-sm text-muted-foreground">
-                  {form.watch("question").length} characters
+                  {form.watch("question").length} {t.home.characters}
                 </span>
                 <Button
                   type="submit"
@@ -117,7 +118,7 @@ export default function Home() {
                   data-testid="button-ask"
                 >
                   <Sparkles className="w-4 h-4 mr-2" />
-                  Ask Council
+                  {t.home.askCouncil}
                 </Button>
               </div>
             </form>
@@ -143,7 +144,7 @@ export default function Home() {
                   : "Failed to get consensus. Please try again."}
               </p>
               <Button onClick={resetForm} data-testid="button-try-again">
-                Try Again
+                {t.home.askAnother}
               </Button>
             </CardContent>
           </Card>
@@ -158,21 +159,21 @@ export default function Home() {
                   className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent"
                   data-testid="tab-answer"
                 >
-                  Answer
+                  {t.home.answer}
                 </TabsTrigger>
                 <TabsTrigger
                   value="receipts"
                   className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent"
                   data-testid="tab-receipts"
                 >
-                  Receipts
+                  {t.home.receipts}
                 </TabsTrigger>
                 <TabsTrigger
                   value="dissent"
                   className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent"
                   data-testid="tab-dissent"
                 >
-                  Dissent
+                  {t.home.dissent}
                   {(result.synthesis?.dissent?.length ?? 0) > 0 && (
                     <Badge variant="destructive" className="ml-2">
                       {result.synthesis?.dissent?.length ?? 0}

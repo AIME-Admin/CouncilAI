@@ -91,7 +91,7 @@ export const users = pgTable("users", {
   profileImageUrl: varchar("profile_image_url"),
   planTier: varchar("plan_tier", { length: 50 }).notNull().default("free"),
   queriesUsed: integer("queries_used").notNull().default(0),
-  quotaRemaining: integer("quota_remaining").notNull().default(10),
+  quotaRemaining: integer("quota_remaining").notNull().default(3),
   billingCycleStart: timestamp("billing_cycle_start").defaultNow(),
   stripeCustomerId: varchar("stripe_customer_id", { length: 255 }),
   createdAt: timestamp("created_at").defaultNow().notNull(),
@@ -166,7 +166,7 @@ export type InsertSubscription = z.infer<typeof insertSubscriptionSchema>;
 
 // Plan configurations
 export const PLAN_CONFIG = {
-  free: { name: "Free", queries: 10, price: 0 },
+  free: { name: "Free", queries: 3, price: 0 },
   basic: { name: "Basic", queries: 100, price: 19 },
   pro: { name: "Pro", queries: 500, price: 49 },
   team: { name: "Team", queries: 2000, price: 99 },

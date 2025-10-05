@@ -1,5 +1,6 @@
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -10,10 +11,11 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
-import { BarChart3, History, Settings, CreditCard, LogOut, Sparkles } from "lucide-react";
+import { BarChart3, History, Settings, CreditCard, LogOut, Languages } from "lucide-react";
 
 export function Navbar() {
   const { user, isAuthenticated, isLoading } = useAuth();
+  const { language, setLanguage, t } = useLanguage();
   const [location] = useLocation();
 
   const getInitials = (user: any) => {
@@ -45,19 +47,19 @@ export function Navbar() {
             <div className="hidden md:flex items-center gap-4">
               <Link href="/" data-testid="link-ask">
                 <Button variant={location === "/" ? "default" : "ghost"} size="sm">
-                  Ask
+                  {t.nav.ask}
                 </Button>
               </Link>
               <Link href="/history" data-testid="link-history">
                 <Button variant={location === "/history" ? "default" : "ghost"} size="sm">
                   <History className="h-4 w-4 mr-2" />
-                  History
+                  {t.nav.history}
                 </Button>
               </Link>
               <Link href="/dashboard" data-testid="link-dashboard">
                 <Button variant={location === "/dashboard" ? "default" : "ghost"} size="sm">
                   <BarChart3 className="h-4 w-4 mr-2" />
-                  Dashboard
+                  {t.nav.dashboard}
                 </Button>
               </Link>
             </div>
@@ -65,13 +67,24 @@ export function Navbar() {
         </div>
 
         <div className="flex items-center gap-4">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setLanguage(language === "en" ? "el" : "en")}
+            data-testid="button-language-toggle"
+            className="gap-2"
+          >
+            <Languages className="h-4 w-4" />
+            <span className="hidden sm:inline">{language === "en" ? "EL" : "EN"}</span>
+          </Button>
+
           {isLoading ? (
             <div className="h-9 w-24 bg-muted animate-pulse rounded-md" />
           ) : isAuthenticated && user ? (
             <>
               {user.quotaRemaining !== undefined && (
-                <Badge variant={user.quotaRemaining > 5 ? "default" : "destructive"} data-testid="badge-quota">
-                  {user.quotaRemaining} queries left
+                <Badge variant={user.quotaRemaining > 1 ? "default" : "destructive"} data-testid="badge-quota">
+                  {user.quotaRemaining} {t.nav.queriesLeft}
                 </Badge>
               )}
               
@@ -91,7 +104,7 @@ export function Navbar() {
                         <p className="text-sm font-medium" data-testid="text-user-email">{user.email}</p>
                       )}
                       <p className="text-xs text-muted-foreground capitalize">
-                        {user.planTier || "free"} Plan
+                        {user.planTier || "free"} {t.nav.plan}
                       </p>
                     </div>
                   </div>
@@ -99,20 +112,20 @@ export function Navbar() {
                   <DropdownMenuItem asChild>
                     <Link href="/preferences" data-testid="link-preferences">
                       <Settings className="mr-2 h-4 w-4" />
-                      Preferences
+                      {t.nav.preferences}
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
                     <Link href="/upgrade" data-testid="link-upgrade">
                       <CreditCard className="mr-2 h-4 w-4" />
-                      Upgrade Plan
+                      {t.nav.upgrade}
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem asChild>
                     <a href="/api/logout" data-testid="button-logout">
                       <LogOut className="mr-2 h-4 w-4" />
-                      Log out
+                      {t.nav.logout}
                     </a>
                   </DropdownMenuItem>
                 </DropdownMenuContent>
@@ -120,7 +133,7 @@ export function Navbar() {
             </>
           ) : (
             <Button asChild data-testid="button-login">
-              <a href="/api/login">Log In</a>
+              <a href="/api/login">{t.nav.login}</a>
             </Button>
           )}
         </div>
