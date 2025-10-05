@@ -1,0 +1,167 @@
+Finalize the Council – Four-LLM Consensus Engine by completing authentication, history, analytics, customization, and monetization layers. Prepare the app for production deployment and Stripe integration.
+
+🔧 Core Tasks
+
+Finish Authentication Integration (Replit Auth → PostgreSQL)
+
+Complete login/logout flows with Replit Auth (Google, GitHub, email).
+
+Map replit_id → user_id in users table.
+
+Ensure session tokens persist and expire safely.
+
+Display logged-in user email/profile in the navbar.
+
+Propagate user_id to queries, sessions, and preferences tables.
+
+Implement Query History (Feature #4)
+
+Add /history route and page listing all past user queries.
+
+Show: timestamp, question text, confidence %, model agreement score.
+
+Include buttons: Re-Ask, Export (JSON/Markdown), Share (copy link).
+
+Save full consensus JSON (answer, critiques, dissent) in the queries table.
+
+Paginate + filter by date or confidence level.
+
+Integrate Stripe Checkout (Monetization)
+
+Add Stripe test keys and environment variables.
+
+Create plans:
+
+Basic: €19 / 100 queries
+
+Pro: €49 / 500 queries
+
+Team: €99 / 2000 queries
+
+Implement usage metering based on queries_used per billing cycle.
+
+Add “remaining queries” indicator in navbar and disable new queries at limit.
+
+Include /upgrade page with plan descriptions and Stripe Checkout buttons.
+
+Handle successful payments → update plan_tier and quota_remaining.
+
+Add Analytics Dashboard (Feature #5)
+
+Create /dashboard route accessible only to authenticated users.
+
+Use Chart.js or Recharts to display:
+
+Average model agreement rate
+
+Confidence distribution over time
+
+Most common dissent pairs (e.g., Gemini vs Claude)
+
+Total queries per day/week
+
+Aggregate data from queries table via SQL views or Prisma queries.
+
+Implement Model Customization (Feature #6)
+
+Add settings page /preferences for logged-in users.
+
+Sliders or toggles to adjust model weights (0–1) for GPT-5, Claude, Gemini, Perplexity.
+
+Store preferences in user_preferences table.
+
+Pass custom weights into the synthesis algorithm when generating consensus.
+
+🧱 Infrastructure & Optimization
+
+Caching: Keep SHA-256 question hashing with a cache_ttl=24h.
+
+Eviction Policy: Implement FIFO or LRU to limit DB growth.
+
+WebSocket Streaming: Confirm stability under concurrent queries; add heartbeat pings.
+
+Security: Sanitize inputs, rate-limit API calls per IP/user.
+
+Logging: Add Sentry or PostHog for error tracking and usage metrics.
+
+Environment:
+
+.env placeholders for all API keys (OpenAI, Anthropic, Gemini, Perplexity, Stripe).
+
+HTTPS + custom domain: council.ai-me.gr.
+
+🎨 Frontend & UX Polish
+
+Update Hero text:
+“Ask the Council — four minds, one verifiable answer.”
+
+Add CTA buttons:
+
+Start Free (10 questions)
+
+Upgrade to Pro
+
+Add pricing section with tier cards and Stripe checkout buttons.
+
+Responsive design with dark theme (already implemented).
+
+Add animated confidence ring and “dissent sparks” visual on results page.
+
+Include a footer with legal links: Terms, Privacy, Contact.
+
+💸 Monetization Rules
+
+Free Tier: 10 consensus questions/month.
+
+Paid Plans: Basic, Pro, Team as defined above.
+
+Overage: €0.02 per additional consensus beyond quota.
+
+Usage Tracking: Each completed synthesis increments queries_used.
+
+Lockout Behavior: When quota exhausted → redirect to /upgrade.
+
+🧠 Optional Enhancements
+
+Add feedback table for user ratings (1–5 stars per answer).
+
+Create /status endpoint returning cache hits, uptime, and model latency.
+
+Admin dashboard to view usage stats, top queries, and system load.
+
+Export all logs as CSV for audit/compliance.
+
+🚀 Deployment
+
+Verify WebSocket streaming and caching under test load.
+
+Connect Stripe → verify test payments.
+
+Deploy backend (Node/Express) on Fly.io or Vercel Edge Functions.
+
+Deploy frontend on Vercel (council.ai-me.gr).
+
+Point domain + enable HTTPS.
+
+Monitor with Sentry / UptimeRobot.
+
+Final Deliverable:
+A production-ready, monetized web app with:
+
+Authenticated users
+
+Query history
+
+Real-time streaming
+
+Analytics dashboard
+
+Model weighting customization
+
+Stripe billing and quotas
+
+Secure caching and logging
+
+✅ Tagline
+
+Council — Four Minds, One Verifiable Answer.
