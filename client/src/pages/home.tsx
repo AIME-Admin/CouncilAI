@@ -170,7 +170,7 @@ export default function Home() {
                   Dissent
                   {(result.synthesis?.dissent?.length ?? 0) > 0 && (
                     <Badge variant="destructive" className="ml-2">
-                      {result.synthesis.dissent.length}
+                      {result.synthesis?.dissent?.length ?? 0}
                     </Badge>
                   )}
                 </TabsTrigger>
@@ -191,13 +191,13 @@ export default function Home() {
                           </span>
                         </div>
                       </div>
-                      <ConfidenceRing confidence={result.synthesis.confidence} />
+                      <ConfidenceRing confidence={result.synthesis?.confidence ?? 0} />
                     </div>
                   </CardHeader>
                   <CardContent className="space-y-6">
                     <div className="prose prose-invert max-w-none">
                       <p className="text-base leading-relaxed text-foreground" data-testid="text-synthesis-summary">
-                        {result.synthesis.summary}
+                        {result.synthesis?.summary ?? "No summary available"}
                       </p>
                     </div>
 
