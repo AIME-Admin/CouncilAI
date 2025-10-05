@@ -50,9 +50,13 @@ export default function Home() {
     <div className="min-h-screen bg-background">
       <div className="max-w-5xl mx-auto px-6 md:px-8 py-12">
         <header className="text-center mb-12 space-y-6">
-          <div className="flex items-center justify-center gap-3">
-            <Sparkles className="w-8 h-8 text-primary" />
-            <h1 className="text-4xl md:text-5xl font-bold text-foreground">Council</h1>
+          <div className="flex items-center justify-center">
+            <img 
+              src="/aime-council-logo.png" 
+              alt="AI-ME COUNCIL" 
+              className="w-48 h-auto"
+              data-testid="logo-aime-council"
+            />
           </div>
           <div className="space-y-3">
             <p className="text-xl md:text-2xl font-semibold text-foreground max-w-3xl mx-auto">
