@@ -25,8 +25,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // User queries endpoint
-  app.get("/api/queries", isAuthenticated, async (req: any, res) => {
+  // User queries endpoint (with path parameters to match frontend)
+  app.get("/api/queries/:page/:limit", isAuthenticated, async (req: any, res) => {
     try {
       const replitId = req.user.claims.sub;
       const user = await storage.getUserByReplitId(replitId);
@@ -34,8 +34,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "User not found" });
       }
       
-      const page = parseInt(req.query.page as string) || 0;
-      const limit = parseInt(req.query.limit as string) || 50;
+      const page = parseInt(req.params.page) || 0;
+      const limit = parseInt(req.params.limit) || 50;
       const offset = page * limit;
       
       const queries = await storage.getUserQueries(user.id, limit, offset);
