@@ -137,11 +137,11 @@ export default function Home() {
           <Card className="border-2 border-destructive">
             <CardContent className="p-8 text-center space-y-4">
               <AlertTriangle className="w-12 h-12 text-destructive mx-auto" />
-              <p className="text-lg font-medium text-foreground">Something went wrong</p>
+              <p className="text-lg font-medium text-foreground">{t.home.errorTitle}</p>
               <p className="text-muted-foreground">
                 {askMutation.error instanceof Error
                   ? askMutation.error.message
-                  : "Failed to get consensus. Please try again."}
+                  : t.home.errorMessage}
               </p>
               <Button onClick={resetForm} data-testid="button-try-again">
                 {t.home.askAnother}
@@ -187,13 +187,13 @@ export default function Home() {
                   <CardHeader>
                     <div className="flex items-start justify-between gap-6 flex-wrap">
                       <div className="flex-1 space-y-2">
-                        <CardTitle className="text-2xl">Consensus Answer</CardTitle>
+                        <CardTitle className="text-2xl">{t.home.consensusAnswer}</CardTitle>
                         <div className="flex items-center gap-2 flex-wrap">
                           {(result.drafts ?? []).map((draft) => (
                             <ModelAvatar key={draft.agent} model={draft.agent} size="sm" active />
                           ))}
                           <span className="text-sm text-muted-foreground ml-2">
-                            {(result.drafts ?? []).length} models in agreement
+                            {(result.drafts ?? []).length} {t.home.modelsInAgreement}
                           </span>
                         </div>
                       </div>
@@ -203,13 +203,13 @@ export default function Home() {
                   <CardContent className="space-y-6">
                     <div className="prose prose-invert max-w-none">
                       <p className="text-base leading-relaxed text-foreground" data-testid="text-synthesis-summary">
-                        {result.synthesis?.summary ?? "No summary available"}
+                        {result.synthesis?.summary ?? t.home.noSummary}
                       </p>
                     </div>
 
                     {(result.synthesis?.citations?.length ?? 0) > 0 && (
                       <div className="space-y-3">
-                        <h3 className="text-sm font-semibold text-foreground">Citations</h3>
+                        <h3 className="text-sm font-semibold text-foreground">{t.home.citations}</h3>
                         <div className="flex flex-wrap gap-2">
                           {(result.synthesis?.citations ?? []).map((citation, idx) => (
                             <a
@@ -248,7 +248,7 @@ export default function Home() {
                           <AlertTriangle className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
                           <div className="space-y-2 flex-1">
                             <p className="text-sm font-medium text-foreground">
-                              {refusedModels.length} {refusedModels.length === 1 ? 'model' : 'models'} declined to answer
+                              {refusedModels.length} {refusedModels.length === 1 ? t.home.model : t.home.models} {t.home.declined}
                             </p>
                             <div className="space-y-2">
                               {refusedModels.map(draft => {
@@ -280,9 +280,9 @@ export default function Home() {
               <TabsContent value="receipts" className="mt-6 space-y-6">
                 <Card>
                   <CardHeader>
-                    <CardTitle>Decision Log</CardTitle>
+                    <CardTitle>{t.home.decisionLog}</CardTitle>
                     <p className="text-sm text-muted-foreground">
-                      Transparent record of how we reached consensus
+                      {t.home.transparentRecord}
                     </p>
                   </CardHeader>
                   <CardContent className="space-y-4">
@@ -309,7 +309,7 @@ export default function Home() {
                 {(result.synthesis?.citations?.length ?? 0) > 0 && (
                   <Card>
                     <CardHeader>
-                      <CardTitle>All Citations</CardTitle>
+                      <CardTitle>{t.home.allCitations}</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-2">
                       {(result.synthesis?.citations ?? []).map((citation, idx) => (
@@ -338,9 +338,9 @@ export default function Home() {
                     <CardContent className="p-12 text-center space-y-4">
                       <Check className="w-16 h-16 text-chart-2 mx-auto" />
                       <div className="space-y-2">
-                        <h3 className="text-xl font-semibold text-foreground">Full Consensus</h3>
+                        <h3 className="text-xl font-semibold text-foreground">{t.home.fullConsensus}</h3>
                         <p className="text-muted-foreground">
-                          All AI models are in agreement on this answer.
+                          {t.home.allModelsAgree}
                         </p>
                       </div>
                     </CardContent>
@@ -353,10 +353,10 @@ export default function Home() {
                           <AlertTriangle className="w-5 h-5 text-chart-4 flex-shrink-0 mt-0.5" />
                           <div className="space-y-1">
                             <p className="text-sm font-medium text-foreground">
-                              Disagreement Detected
+                              {t.home.disagreementDetected}
                             </p>
                             <p className="text-sm text-muted-foreground">
-                              Some models had different perspectives on certain points.
+                              {t.home.differentPerspectives}
                             </p>
                           </div>
                         </div>
@@ -367,7 +367,7 @@ export default function Home() {
                       <Card key={idx} className="border-chart-4/30" data-testid={`dissent-${idx}`}>
                         <CardHeader>
                           <div className="flex items-start justify-between gap-4">
-                            <CardTitle className="text-lg">Dissenting View {idx + 1}</CardTitle>
+                            <CardTitle className="text-lg">{t.home.dissentingView} {idx + 1}</CardTitle>
                             <div className="flex items-center gap-2">
                               {dissent.who.map((model) => (
                                 <ModelAvatar key={model} model={model} size="sm" active />
