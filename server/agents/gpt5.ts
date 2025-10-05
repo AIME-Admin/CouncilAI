@@ -27,7 +27,7 @@ Be precise and cite real sources where possible.`
         }
       ],
       response_format: { type: "json_object" },
-      max_completion_tokens: 2048,
+      max_completion_tokens: 4096,
     });
 
     const result = JSON.parse(response.choices[0].message.content || "{}");

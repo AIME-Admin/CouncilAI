@@ -40,7 +40,7 @@ export async function processQuestion(question: string, streamQueryId?: string):
   const draftPromises = draftFunctions.map(async (getDraft, index) => {
     try {
       const modelName = modelNames[index];
-      const draft = await withTimeout(getDraft(question), 30000, modelName);
+      const draft = await withTimeout(getDraft(question), 60000, modelName);
       drafts.push(draft);
       
       if (streamQueryId) {
