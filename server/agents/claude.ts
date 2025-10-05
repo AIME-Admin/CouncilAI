@@ -32,13 +32,26 @@ Be precise and cite real sources where possible.`,
 
     const content = response.content[0];
     if (content.type === 'text') {
-      const result = JSON.parse(content.text);
-      
-      return {
-        agent: "claude",
-        claims: result.claims || [],
-        confidence: Math.min(1, Math.max(0, result.confidence || 0.7)),
-      };
+      try {
+        const result = JSON.parse(content.text);
+        
+        return {
+          agent: "claude",
+          claims: result.claims || [],
+          confidence: Math.min(1, Math.max(0, result.confidence || 0.7)),
+        };
+      } catch (parseError) {
+        // Claude refused or didn't provide JSON - return a low-confidence placeholder
+        console.log("[Claude] Response was not JSON, likely refused:", content.text.slice(0, 100));
+        return {
+          agent: "claude",
+          claims: [{
+            text: `Claude declined to answer: ${content.text.slice(0, 200)}`,
+            support: []
+          }],
+          confidence: 0.1,
+        };
+      }
     }
     
     throw new Error("Unexpected response format");

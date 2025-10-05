@@ -36,7 +36,9 @@ Be precise and cite real sources where possible.`
     });
 
     if (!response.ok) {
-      throw new Error(`Perplexity API error: ${response.statusText}`);
+      const errorText = await response.text();
+      console.error("[Perplexity] API error response:", errorText);
+      throw new Error(`Perplexity API error: ${response.statusText} - ${errorText}`);
     }
 
     const data = await response.json();
@@ -98,7 +100,9 @@ Respond with JSON: {"issues": ["issue 1", "issue 2", ...]}`
     });
 
     if (!response.ok) {
-      throw new Error(`Perplexity API error: ${response.statusText}`);
+      const errorText = await response.text();
+      console.error("[Perplexity] API error response:", errorText);
+      throw new Error(`Perplexity API error: ${response.statusText} - ${errorText}`);
     }
 
     const data = await response.json();
