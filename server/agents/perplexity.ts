@@ -13,7 +13,7 @@ export async function getDraft(question: string): Promise<DraftResponse> {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "llama-3.1-sonar-small-128k-online",
+        model: "llama-3.1-sonar-large-128k-online",
         messages: [
           {
             role: "system",
@@ -82,7 +82,7 @@ export async function getCritique(
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "llama-3.1-sonar-small-128k-online",
+        model: "llama-3.1-sonar-large-128k-online",
         messages: [
           {
             role: "system",
