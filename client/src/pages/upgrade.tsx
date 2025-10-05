@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -10,7 +11,7 @@ const STRIPE_TEST_MODE = true; // Change to false for production
 
 const PLAN_FEATURES = {
   free: [
-    "10 consensus queries per month",
+    "3 consensus queries per month",
     "Access to all 4 AI models",
     "Basic query history",
     "Standard support",
