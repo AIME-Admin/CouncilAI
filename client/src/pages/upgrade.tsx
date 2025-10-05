@@ -40,7 +40,7 @@ const PLAN_FEATURES = {
     "Model weight customization",
     "Dedicated support",
     "Advanced analytics dashboard",
-    "Team collaboration features",
+    "Higher query limits for teams",
   ],
 };
 
