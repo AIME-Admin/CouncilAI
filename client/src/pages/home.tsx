@@ -224,6 +224,52 @@ export default function Home() {
                     )}
                   </CardContent>
                 </Card>
+
+                {(() => {
+                  const refusedModels = (result.drafts ?? []).filter(draft => 
+                    draft.claims.some(claim => 
+                      claim.text.includes("declined to answer") || 
+                      claim.text.includes("refused") ||
+                      claim.text.includes("cannot provide")
+                    )
+                  );
+                  
+                  if (refusedModels.length === 0) return null;
+                  
+                  return (
+                    <Card className="border-amber-500/30 bg-amber-500/5">
+                      <CardContent className="p-4">
+                        <div className="flex items-start gap-3">
+                          <AlertTriangle className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
+                          <div className="space-y-2 flex-1">
+                            <p className="text-sm font-medium text-foreground">
+                              {refusedModels.length} {refusedModels.length === 1 ? 'model' : 'models'} declined to answer
+                            </p>
+                            <div className="space-y-2">
+                              {refusedModels.map(draft => {
+                                const refusalClaim = draft.claims.find(c => 
+                                  c.text.includes("declined to answer") || 
+                                  c.text.includes("refused") ||
+                                  c.text.includes("cannot provide")
+                                );
+                                if (!refusalClaim) return null;
+                                
+                                return (
+                                  <div key={draft.agent} className="flex items-start gap-2 text-sm" data-testid={`refusal-${draft.agent}`}>
+                                    <ModelAvatar model={draft.agent} size="sm" />
+                                    <p className="text-muted-foreground flex-1">
+                                      {refusalClaim.text}
+                                    </p>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                })()}
               </TabsContent>
 
               <TabsContent value="receipts" className="mt-6 space-y-6">
