@@ -26,8 +26,8 @@ export default function Home() {
 
   const askMutation = useMutation({
     mutationFn: async (data: AskRequest) => {
-      const response = await apiRequest<AskResponse>("POST", "/api/ask", data);
-      return response;
+      const response = await apiRequest("POST", "/api/ask", data);
+      return response as unknown as AskResponse;
     },
     onSuccess: (data) => {
       setResult(data);
@@ -48,14 +48,41 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-background">
       <div className="max-w-5xl mx-auto px-6 md:px-8 py-12">
-        <header className="text-center mb-12 space-y-4">
+        <header className="text-center mb-12 space-y-6">
           <div className="flex items-center justify-center gap-3">
             <Sparkles className="w-8 h-8 text-primary" />
             <h1 className="text-4xl md:text-5xl font-bold text-foreground">Council</h1>
           </div>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Get consensus answers from 4 leading AI models with transparent decision-making
-          </p>
+          <div className="space-y-3">
+            <p className="text-xl md:text-2xl font-semibold text-foreground max-w-3xl mx-auto">
+              Get consensus answers from 4 leading AI models
+            </p>
+            <p className="text-base text-muted-foreground max-w-2xl mx-auto">
+              Transparent decision-making powered by GPT-5, Claude, Gemini, and Perplexity
+            </p>
+          </div>
+          <div className="flex items-center justify-center gap-3 pt-2">
+            <Button
+              size="lg"
+              variant="default"
+              onClick={() => window.location.href = "/upgrade"}
+              data-testid="button-view-pricing"
+            >
+              View Pricing
+            </Button>
+            <Button
+              size="lg"
+              variant="outline"
+              onClick={() => {
+                const textarea = document.querySelector('[data-testid="input-question"]') as HTMLTextAreaElement;
+                textarea?.scrollIntoView({ behavior: "smooth" });
+                textarea?.focus();
+              }}
+              data-testid="button-try-now"
+            >
+              Try Now
+            </Button>
+          </div>
         </header>
 
         {!result && !askMutation.isPending && (
