@@ -50,7 +50,7 @@ export function synthesize(
     critiqueMap.get(key)!.push(critique);
   }
 
-  for (const [normalized, claimData] of allClaims.entries()) {
+  for (const [normalized, claimData] of Array.from(allClaims.entries())) {
     for (const supporter of claimData.supporters) {
       const agentCritiques = critiqueMap.get(supporter) || [];
       
@@ -92,17 +92,23 @@ export function synthesize(
     const avgConfidence = confidenceValues.reduce((a, b) => a + b, 0) / confidenceValues.length;
     const hasCritiques = data.critiques.size > 0;
 
-    if (supportCount >= 3 && avgConfidence >= 0.6 && !hasCritiques) {
+    if (supportCount >= 3 && avgConfidence >= 0.5 && !hasCritiques) {
       finalClaims.push(data.text);
       data.sources.forEach(src => finalCitations.add(src));
       decision_log.push(
         `Kept: "${data.text.slice(0, 60)}..." (${supportCount}/4 models agreed, avg confidence: ${(avgConfidence * 100).toFixed(0)}%)`
       );
-    } else if (supportCount >= 2 && avgConfidence >= 0.7 && !hasCritiques) {
+    } else if (supportCount >= 2 && avgConfidence >= 0.5 && !hasCritiques) {
       finalClaims.push(data.text);
       data.sources.forEach(src => finalCitations.add(src));
       decision_log.push(
         `Included: "${data.text.slice(0, 60)}..." (${supportCount}/4 models, high confidence: ${(avgConfidence * 100).toFixed(0)}%)`
+      );
+    } else if (supportCount >= 1 && avgConfidence >= 0.7 && !hasCritiques) {
+      finalClaims.push(data.text);
+      data.sources.forEach(src => finalCitations.add(src));
+      decision_log.push(
+        `Included: "${data.text.slice(0, 60)}..." (single model, very high confidence: ${(avgConfidence * 100).toFixed(0)}%)`
       );
     } else {
       const reasons: string[] = [];
@@ -117,7 +123,7 @@ export function synthesize(
       if (supportCount === 1 && avgConfidence >= 0.7) {
         dissent.push({
           point: data.text,
-          who: Array.from(data.supporters) as any[],
+          who: Array.from(data.supporters) as ("gpt5" | "claude" | "gemini" | "perplexity")[],
         });
       }
     }

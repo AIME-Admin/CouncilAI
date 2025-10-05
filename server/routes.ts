@@ -187,6 +187,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 await cacheResult(validated.question, result, userId);
               }
               
+              // Save query to database for history
+              if (user) {
+                const crypto = await import('crypto');
+                const questionHash = crypto.createHash('sha256')
+                  .update(validated.question.toLowerCase().trim())
+                  .digest('hex')
+                  .slice(0, 16);
+                  
+                await storage.createQuery({
+                  userId: user.id,
+                  questionHash,
+                  question: validated.question,
+                  responseData: result as any,
+                  confidence: result.synthesis.confidence,
+                });
+              }
+              
               // Decrement quota for authenticated users
               if (user) {
                 const newQueriesUsed = user.queriesUsed + 1;
@@ -207,6 +224,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       if (useCache) {
         await cacheResult(validated.question, result, userId);
+      }
+      
+      // Save query to database for history
+      if (user) {
+        const crypto = await import('crypto');
+        const questionHash = crypto.createHash('sha256')
+          .update(validated.question.toLowerCase().trim())
+          .digest('hex')
+          .slice(0, 16);
+          
+        await storage.createQuery({
+          userId: user.id,
+          questionHash,
+          question: validated.question,
+          responseData: result as any,
+          confidence: result.synthesis.confidence,
+        });
       }
       
       // Decrement quota for authenticated users

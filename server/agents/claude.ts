@@ -33,7 +33,14 @@ Be precise and cite real sources where possible.`,
     const content = response.content[0];
     if (content.type === 'text') {
       try {
-        const result = JSON.parse(content.text);
+        // Strip markdown code blocks if present
+        let textContent = content.text.trim();
+        const jsonMatch = textContent.match(/```json\s*\n?([\s\S]*?)\n?```/);
+        if (jsonMatch) {
+          textContent = jsonMatch[1];
+        }
+        
+        const result = JSON.parse(textContent);
         
         return {
           agent: "claude",
