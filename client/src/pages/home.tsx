@@ -340,13 +340,13 @@ export default function Home() {
                   <div className="flex items-center gap-6 flex-wrap">
                     <div className="flex items-center gap-2 text-muted-foreground">
                       <Clock className="w-4 h-4" />
-                      <span>{result.processing_time_ms}ms</span>
+                      <span>{result.processing_time_ms ?? 0}ms</span>
                     </div>
                     <div className="flex items-center gap-2 text-muted-foreground">
                       <Hash className="w-4 h-4" />
-                      <span className="font-mono">{result.query_id.slice(0, 8)}</span>
+                      <span className="font-mono">{result.query_id?.slice(0, 8) ?? "N/A"}</span>
                     </div>
-                    <span className="text-muted-foreground">{result.timestamp}</span>
+                    <span className="text-muted-foreground">{result.timestamp ?? ""}</span>
                   </div>
                   <Button onClick={resetForm} variant="outline" data-testid="button-new-query">
                     New Query
