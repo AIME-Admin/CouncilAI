@@ -69,17 +69,6 @@ export default function Preferences() {
       });
     },
     onError: (error: Error) => {
-      if (isUnauthorizedError(error)) {
-        toast({
-          title: "Unauthorized",
-          description: "You are logged out. Logging in again...",
-          variant: "destructive",
-        });
-        setTimeout(() => {
-          window.location.href = "/api/login";
-        }, 500);
-        return;
-      }
       toast({
         title: "Error",
         description: "Failed to save preferences. Please try again.",
@@ -103,7 +92,7 @@ export default function Preferences() {
     }));
   };
 
-  if (authLoading || isLoading) {
+  if (isLoading) {
     return (
       <div className="container mx-auto px-4 py-8 max-w-2xl">
         <Skeleton className="h-10 w-48 mb-4" />
