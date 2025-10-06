@@ -80,12 +80,13 @@ export const sessions = pgTable(
   (table) => [index("IDX_session_expire").on(table.expire)]
 );
 
-// Users table with monetization fields
+// Users table with monetization fields and email/password auth
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
   replitId: varchar("replit_id", { length: 255 }).unique(),
-  username: varchar("username", { length: 255 }),
-  email: varchar("email", { length: 255 }),
+  username: varchar("username", { length: 255 }).notNull().unique(),
+  email: varchar("email", { length: 255 }).notNull(),
+  password: varchar("password", { length: 255 }).notNull(),
   firstName: varchar("first_name", { length: 255 }),
   lastName: varchar("last_name", { length: 255 }),
   profileImageUrl: varchar("profile_image_url"),
