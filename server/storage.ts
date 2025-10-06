@@ -15,11 +15,15 @@ import {
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc } from "drizzle-orm";
+import session from "express-session";
+import connectPg from "connect-pg-simple";
 
 export interface IStorage {
-  // User operations (required for Replit Auth)
+  // User operations
   getUser(id: number): Promise<User | undefined>;
   getUserByReplitId(replitId: string): Promise<User | undefined>;
+  getUserByUsername(username: string): Promise<User | undefined>;
+  createUser(user: InsertUser): Promise<User>;
   upsertUser(user: Partial<InsertUser>): Promise<User>;
   updateUserQuota(userId: number, queriesUsed: number, quotaRemaining: number): Promise<void>;
   
@@ -36,9 +40,22 @@ export interface IStorage {
   createSubscription(subscription: InsertSubscription): Promise<Subscription>;
   updateSubscription(userId: number, updates: Partial<InsertSubscription>): Promise<Subscription | undefined>;
   getActiveSubscription(userId: number): Promise<Subscription | undefined>;
+  
+  // Session store
+  sessionStore: session.Store;
 }
 
 export class DatabaseStorage implements IStorage {
+  sessionStore: session.Store;
+
+  constructor() {
+    const PostgresSessionStore = connectPg(session);
+    this.sessionStore = new PostgresSessionStore({
+      conString: process.env.DATABASE_URL,
+      createTableIfMissing: true,
+    });
+  }
+
   // User operations
   async getUser(id: number): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(eq(users.id, id));
@@ -47,6 +64,24 @@ export class DatabaseStorage implements IStorage {
 
   async getUserByReplitId(replitId: string): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(eq(users.replitId, replitId));
+    return user;
+  }
+
+  async getUserByUsername(username: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.username, username));
+    return user;
+  }
+
+  async createUser(userData: InsertUser): Promise<User> {
+    const [user] = await db
+      .insert(users)
+      .values({
+        ...userData,
+        planTier: "free",
+        queriesUsed: 0,
+        quotaRemaining: PLAN_CONFIG.free.queries,
+      })
+      .returning();
     return user;
   }
 
