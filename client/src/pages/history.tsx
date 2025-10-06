@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -13,26 +13,13 @@ import type { Query } from "@shared/schema";
 
 export default function History() {
   const { toast } = useToast();
-  const { isAuthenticated, isLoading: authLoading } = useAuth();
+  const { user } = useAuth();
   const [page, setPage] = useState(0);
   const limit = 20;
 
-  useEffect(() => {
-    if (!authLoading && !isAuthenticated) {
-      toast({
-        title: "Unauthorized",
-        description: "You are logged out. Logging in again...",
-        variant: "destructive",
-      });
-      setTimeout(() => {
-        window.location.href = "/api/login";
-      }, 500);
-    }
-  }, [isAuthenticated, authLoading, toast]);
-
   const { data: queries, isLoading, error } = useQuery<Query[]>({
     queryKey: ["/api/queries", page, limit],
-    enabled: isAuthenticated,
+    enabled: !!user,
     retry: false,
   });
 
@@ -67,7 +54,7 @@ export default function History() {
     });
   };
 
-  if (authLoading || isLoading) {
+  if (isLoading) {
     return (
       <div className="container mx-auto px-4 py-8">
         <div className="space-y-4">

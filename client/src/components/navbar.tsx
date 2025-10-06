@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from "@/hooks/use-auth";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -14,9 +14,10 @@ import { Badge } from "@/components/ui/badge";
 import { BarChart3, History, Settings, CreditCard, LogOut, Languages } from "lucide-react";
 
 export function Navbar() {
-  const { user, isAuthenticated, isLoading } = useAuth();
+  const { user, isLoading, logoutMutation } = useAuth();
   const { language, setLanguage, t } = useLanguage();
   const [location] = useLocation();
+  const isAuthenticated = !!user;
 
   const getInitials = (user: any) => {
     if (user?.firstName && user?.lastName) {
@@ -122,18 +123,19 @@ export function Navbar() {
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem asChild>
-                    <a href="/api/logout" data-testid="button-logout">
-                      <LogOut className="mr-2 h-4 w-4" />
-                      {t.nav.logout}
-                    </a>
+                  <DropdownMenuItem 
+                    onClick={() => logoutMutation.mutate()}
+                    data-testid="button-logout"
+                  >
+                    <LogOut className="mr-2 h-4 w-4" />
+                    {t.nav.logout}
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             </>
           ) : (
             <Button asChild data-testid="button-login">
-              <a href="/api/login">{t.nav.login}</a>
+              <Link href="/auth">{t.nav.login}</Link>
             </Button>
           )}
         </div>

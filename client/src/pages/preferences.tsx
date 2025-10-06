@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -21,7 +21,7 @@ const MODELS = [
 
 export default function Preferences() {
   const { toast } = useToast();
-  const { isAuthenticated, isLoading: authLoading } = useAuth();
+  const { user } = useAuth();
   
   const [modelWeights, setModelWeights] = useState<Record<string, number>>({
     gpt5: 1,
@@ -37,22 +37,9 @@ export default function Preferences() {
     "perplexity",
   ]);
 
-  useEffect(() => {
-    if (!authLoading && !isAuthenticated) {
-      toast({
-        title: "Unauthorized",
-        description: "You are logged out. Logging in again...",
-        variant: "destructive",
-      });
-      setTimeout(() => {
-        window.location.href = "/api/login";
-      }, 500);
-    }
-  }, [isAuthenticated, authLoading, toast]);
-
   const { data: preferences, isLoading, error } = useQuery<UserPreferences>({
     queryKey: ["/api/preferences"],
-    enabled: isAuthenticated,
+    enabled: !!user,
     retry: false,
   });
 

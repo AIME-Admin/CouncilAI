@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from "@/hooks/use-auth";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Check, Sparkles } from "lucide-react";
 import { PLAN_CONFIG } from "@shared/schema";
 
-const STRIPE_TEST_MODE = true; // Change to false for production
+const STRIPE_TEST_MODE = true;
 
 const PLAN_FEATURES = {
   free: [
@@ -45,12 +45,11 @@ const PLAN_FEATURES = {
 };
 
 export default function Upgrade() {
-  const { user, isAuthenticated, isLoading } = useAuth();
+  const { user, isLoading } = useAuth();
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
 
   const handleUpgrade = async (planTier: string) => {
-    if (!isAuthenticated) {
-      window.location.href = "/api/login";
+    if (!user) {
       return;
     }
 
