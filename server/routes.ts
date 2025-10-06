@@ -1,39 +1,28 @@
-import type { Express } from "express";
+import type { Express, RequestHandler } from "express";
 import { createServer, type Server } from "http";
 import { askRequestSchema, PLAN_CONFIG } from "@shared/schema";
 import { processQuestion } from "./orchestrator";
 import { randomUUID } from "crypto";
 import { getCachedResult, cacheResult } from "./cache";
 import { sendError } from "./websocket";
-import { setupAuth, isAuthenticated } from "./replitAuth";
+import { setupAuth } from "./auth";
 import { storage } from "./storage";
 import { createCheckoutSession, handleWebhook, stripe } from "./stripe";
 
+const isAuthenticated: RequestHandler = (req, res, next) => {
+  if (!req.isAuthenticated()) {
+    return res.status(401).json({ message: "Unauthorized" });
+  }
+  next();
+};
+
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Setup authentication
-  await setupAuth(app);
-  
-  // Auth user endpoint
-  app.get("/api/auth/user", isAuthenticated, async (req: any, res) => {
-    try {
-      const replitId = req.user.claims.sub;
-      const user = await storage.getUserByReplitId(replitId);
-      res.json(user);
-    } catch (error) {
-      console.error("Error fetching user:", error);
-      res.status(500).json({ message: "Failed to fetch user" });
-    }
-  });
+  setupAuth(app);
 
   // User queries endpoint (with path parameters to match frontend)
   app.get("/api/queries/:page/:limit", isAuthenticated, async (req: any, res) => {
     try {
-      const replitId = req.user.claims.sub;
-      const user = await storage.getUserByReplitId(replitId);
-      if (!user) {
-        return res.status(404).json({ message: "User not found" });
-      }
-      
+      const user = req.user;
       const page = parseInt(req.params.page) || 0;
       const limit = parseInt(req.params.limit) || 50;
       const offset = page * limit;
@@ -49,12 +38,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // User preferences endpoint
   app.get("/api/preferences", isAuthenticated, async (req: any, res) => {
     try {
-      const replitId = req.user.claims.sub;
-      const user = await storage.getUserByReplitId(replitId);
-      if (!user) {
-        return res.status(404).json({ message: "User not found" });
-      }
-      
+      const user = req.user;
       const preferences = await storage.getUserPreferences(user.id);
       res.json(preferences);
     } catch (error) {
@@ -66,12 +50,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Update preferences endpoint
   app.post("/api/preferences", isAuthenticated, async (req: any, res) => {
     try {
-      const replitId = req.user.claims.sub;
-      const user = await storage.getUserByReplitId(replitId);
-      if (!user) {
-        return res.status(404).json({ message: "User not found" });
-      }
-      
+      const user = req.user;
       const preferences = await storage.upsertUserPreferences({
         userId: user.id,
         ...req.body,
@@ -86,12 +65,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Stripe checkout session
   app.post("/api/stripe/create-checkout-session", isAuthenticated, async (req: any, res) => {
     try {
-      const replitId = req.user.claims.sub;
-      const user = await storage.getUserByReplitId(replitId);
-      if (!user) {
-        return res.status(404).json({ error: "User not found" });
-      }
-
+      const user = req.user;
       const { planTier } = req.body;
       if (!planTier) {
         return res.status(400).json({ error: "Plan tier required" });
@@ -146,8 +120,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let user = null;
       let userId: number | undefined = undefined;
       
-      if (req.isAuthenticated?.() && req.user?.claims?.sub) {
-        user = await storage.getUserByReplitId(req.user.claims.sub);
+      if (req.isAuthenticated?.()) {
+        user = req.user;
         userId = user?.id;
         
         // Check quota for authenticated users
