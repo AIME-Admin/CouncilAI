@@ -21,10 +21,8 @@ import connectPg from "connect-pg-simple";
 export interface IStorage {
   // User operations
   getUser(id: number): Promise<User | undefined>;
-  getUserByReplitId(replitId: string): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
-  upsertUser(user: Partial<InsertUser>): Promise<User>;
   updateUserQuota(userId: number, queriesUsed: number, quotaRemaining: number): Promise<void>;
   
   // Query operations
@@ -62,11 +60,6 @@ export class DatabaseStorage implements IStorage {
     return user;
   }
 
-  async getUserByReplitId(replitId: string): Promise<User | undefined> {
-    const [user] = await db.select().from(users).where(eq(users.replitId, replitId));
-    return user;
-  }
-
   async getUserByUsername(username: string): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(eq(users.username, username));
     return user;
@@ -81,38 +74,6 @@ export class DatabaseStorage implements IStorage {
         queriesUsed: 0,
         quotaRemaining: PLAN_CONFIG.free.queries,
       })
-      .returning();
-    return user;
-  }
-
-  async upsertUser(userData: Partial<InsertUser>): Promise<User> {
-    // If replitId exists, try to find existing user
-    if (userData.replitId) {
-      const existing = await this.getUserByReplitId(userData.replitId);
-      
-      if (existing) {
-        // Update existing user
-        const [updated] = await db
-          .update(users)
-          .set({
-            ...userData,
-            updatedAt: new Date(),
-          })
-          .where(eq(users.replitId, userData.replitId))
-          .returning();
-        return updated;
-      }
-    }
-    
-    // Create new user with free plan defaults
-    const [user] = await db
-      .insert(users)
-      .values({
-        ...userData,
-        planTier: "free",
-        queriesUsed: 0,
-        quotaRemaining: PLAN_CONFIG.free.queries,
-      } as InsertUser)
       .returning();
     return user;
   }

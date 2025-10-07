@@ -83,7 +83,6 @@ export const sessions = pgTable(
 // Users table with monetization fields and email/password auth
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
-  replitId: varchar("replit_id", { length: 255 }).unique(),
   username: varchar("username", { length: 255 }).notNull().unique(),
   email: varchar("email", { length: 255 }).notNull(),
   password: varchar("password", { length: 255 }).notNull(),
