@@ -103,8 +103,14 @@ Response:
   - **Core MVP**: Full consensus engine with 4 AI models, cross-critique, and synthesis
   - **WebSocket Streaming**: Real-time progress updates with message buffering
   - **Database & Caching**: PostgreSQL with SHA-256-based query caching
-  - **Auth Integration**: Replit Auth setup (sessions table ready)
-  - **Remaining**: User auth flow, query history, analytics dashboard, model customization
+  - **Auth Integration**: Replit Auth + Local auth with sessions (fully implemented)
+  - **Production Ready**: Rate limiting, security headers, CORS, error boundaries, legal pages
+  - **Contact Form**: Support page with contact_messages table (requires db:push for production)
+  
+- **DEPLOYMENT NOTE**: Before production deploy, run `npm run db:push --force` to sync:
+  - contact_messages table (for contact form)
+  - Any schema updates to existing tables
+  - This ensures all database changes are properly migrated
 
 ## Environment Variables
 - `OPENAI_API_KEY`: GPT-5 access
