@@ -83,6 +83,7 @@ export const sessions = pgTable(
 // Users table with monetization fields and email/password auth
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
+  replitId: varchar("replit_id", { length: 255 }).unique(),
   username: varchar("username", { length: 255 }).notNull().unique(),
   email: varchar("email", { length: 255 }).notNull(),
   password: varchar("password", { length: 255 }).notNull(),
@@ -163,6 +164,21 @@ export const insertSubscriptionSchema = createInsertSchema(subscriptions).omit({
   updatedAt: true,
 });
 export type InsertSubscription = z.infer<typeof insertSubscriptionSchema>;
+
+// Contact messages table
+export const contactMessages = pgTable("contact_messages", {
+  id: serial("id").primaryKey(),
+  name: varchar("name", { length: 255 }).notNull(),
+  email: varchar("email", { length: 255 }).notNull(),
+  subject: varchar("subject", { length: 500 }).notNull(),
+  message: text("message").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  status: varchar("status", { length: 50 }).default("new").notNull(),
+});
+
+export const insertContactMessageSchema = createInsertSchema(contactMessages).omit({ id: true, createdAt: true, status: true });
+export type InsertContactMessage = z.infer<typeof insertContactMessageSchema>;
+export type SelectContactMessage = typeof contactMessages.$inferSelect;
 
 // Plan configurations
 export const PLAN_CONFIG = {

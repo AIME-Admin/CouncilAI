@@ -23,18 +23,18 @@ export function setupWebSocket(server: Server) {
         const data = JSON.parse(message.toString());
         if (data.type === "register" && data.queryId) {
           queryId = data.queryId;
-          clients.set(queryId, ws);
-          console.log(`[WebSocket] Client registered for query ${queryId.slice(0, 8)}`);
+          clients.set(data.queryId, ws);
+          console.log(`[WebSocket] Client registered for query ${data.queryId.slice(0, 8)}`);
           
-          const bufferedMessages = messageBuffers.get(queryId);
+          const bufferedMessages = messageBuffers.get(data.queryId);
           if (bufferedMessages && bufferedMessages.length > 0) {
-            console.log(`[WebSocket] Sending ${bufferedMessages.length} buffered messages for ${queryId.slice(0, 8)}`);
+            console.log(`[WebSocket] Sending ${bufferedMessages.length} buffered messages for ${data.queryId.slice(0, 8)}`);
             bufferedMessages.forEach(msg => {
               if (ws.readyState === WebSocket.OPEN) {
                 ws.send(JSON.stringify(msg));
               }
             });
-            messageBuffers.delete(queryId);
+            messageBuffers.delete(data.queryId);
           }
         }
       } catch (error) {

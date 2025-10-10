@@ -1,13 +1,15 @@
 import type { Express, RequestHandler } from "express";
 import { createServer, type Server } from "http";
-import { askRequestSchema, PLAN_CONFIG } from "@shared/schema";
+import { askRequestSchema, PLAN_CONFIG, insertContactMessageSchema, contactMessages } from "@shared/schema";
 import { processQuestion } from "./orchestrator";
 import { randomUUID } from "crypto";
 import { getCachedResult, cacheResult } from "./cache";
 import { sendError } from "./websocket";
 import { setupAuth } from "./auth";
 import { storage } from "./storage";
-import { createCheckoutSession, handleWebhook, stripe } from "./stripe";
+import { createCheckoutSession, handleWebhook, stripe, isStripeTestMode } from "./stripe";
+import { queryRateLimiter, apiRateLimiter } from "./rate-limiter";
+import { db } from "./db";
 
 const isAuthenticated: RequestHandler = (req, res, next) => {
   if (!req.isAuthenticated()) {
@@ -39,7 +41,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/preferences", isAuthenticated, async (req: any, res) => {
     try {
       const user = req.user;
-      const preferences = await storage.getUserPreferences(user.id);
+      let preferences = await storage.getUserPreferences(user.id);
+      
+      // Create default preferences if none exist
+      if (!preferences) {
+        preferences = await storage.upsertUserPreferences({
+          userId: user.id,
+          modelWeights: { gpt5: 1, claude: 1, gemini: 1, perplexity: 1 },
+          enabledModels: ["gpt5", "claude", "gemini", "perplexity"],
+        });
+      }
+      
       res.json(preferences);
     } catch (error) {
       console.error("Error fetching preferences:", error);
@@ -60,6 +72,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.error("Error updating preferences:", error);
       res.status(500).json({ message: "Failed to update preferences" });
     }
+  });
+
+  // Stripe config endpoint
+  app.get("/api/stripe/config", (_req, res) => {
+    res.json({ 
+      testMode: isStripeTestMode,
+      enabled: !!stripe 
+    });
   });
 
   // Stripe checkout session
@@ -110,7 +130,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(400).json({ error: "Webhook error" });
     }
   });
-  app.post("/api/ask", async (req: any, res) => {
+  app.post("/api/ask", queryRateLimiter, async (req: any, res) => {
     try {
       const validated = askRequestSchema.parse(req.body);
       const useStreaming = req.query.stream === "true";
@@ -250,6 +270,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
           error: "An unexpected error occurred",
         });
       }
+    }
+  });
+
+  // Contact form submission endpoint
+  app.post("/api/contact", async (req, res) => {
+    try {
+      const validated = insertContactMessageSchema.parse(req.body);
+      
+      const [message] = await db.insert(contactMessages).values(validated).returning();
+      
+      console.log(`[Contact] New message from ${validated.email}: ${validated.subject}`);
+      
+      res.json({ 
+        success: true, 
+        message: "Message sent successfully" 
+      });
+    } catch (error) {
+      console.error("[Contact] Error saving message:", error);
+      res.status(500).json({ 
+        message: "Failed to send message" 
+      });
     }
   });
 

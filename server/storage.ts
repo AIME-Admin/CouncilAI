@@ -23,7 +23,9 @@ export interface IStorage {
   getUser(id: number): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
+  updateUser(userId: number, updates: Partial<InsertUser>): Promise<User | undefined>;
   updateUserQuota(userId: number, queriesUsed: number, quotaRemaining: number): Promise<void>;
+  upsertUser(user: Partial<InsertUser> & { replitId: string }): Promise<User>;
   
   // Query operations
   createQuery(query: InsertQuery): Promise<Query>;
@@ -78,11 +80,56 @@ export class DatabaseStorage implements IStorage {
     return user;
   }
 
+  async updateUser(userId: number, updates: Partial<InsertUser>): Promise<User | undefined> {
+    const [updated] = await db
+      .update(users)
+      .set({
+        ...updates,
+        updatedAt: new Date(),
+      })
+      .where(eq(users.id, userId))
+      .returning();
+    return updated;
+  }
+
   async updateUserQuota(userId: number, queriesUsed: number, quotaRemaining: number): Promise<void> {
     await db
       .update(users)
       .set({ queriesUsed, quotaRemaining })
       .where(eq(users.id, userId));
+  }
+
+  async upsertUser(userData: Partial<InsertUser> & { replitId: string }): Promise<User> {
+    const [existing] = await db
+      .select()
+      .from(users)
+      .where(eq(users.replitId, userData.replitId));
+
+    if (existing) {
+      const [updated] = await db
+        .update(users)
+        .set({
+          ...userData,
+          updatedAt: new Date(),
+        })
+        .where(eq(users.id, existing.id))
+        .returning();
+      return updated;
+    }
+
+    const [user] = await db
+      .insert(users)
+      .values({
+        username: userData.username || userData.replitId,
+        email: userData.email || `${userData.replitId}@replit.user`,
+        password: "",
+        ...userData,
+        planTier: userData.planTier || "free",
+        queriesUsed: userData.queriesUsed || 0,
+        quotaRemaining: userData.quotaRemaining !== undefined ? userData.quotaRemaining : PLAN_CONFIG.free.queries,
+      })
+      .returning();
+    return user;
   }
 
   // Query operations

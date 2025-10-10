@@ -1,13 +1,12 @@
 import { useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Check, Sparkles } from "lucide-react";
 import { PLAN_CONFIG } from "@shared/schema";
-
-const STRIPE_TEST_MODE = true;
 
 const PLAN_FEATURES = {
   free: [
@@ -47,6 +46,10 @@ const PLAN_FEATURES = {
 export default function Upgrade() {
   const { user, isLoading } = useAuth();
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
+  
+  const { data: stripeConfig } = useQuery<{ testMode: boolean; enabled: boolean }>({
+    queryKey: ["/api/stripe/config"],
+  });
 
   const handleUpgrade = async (planTier: string) => {
     if (!user) {
@@ -91,7 +94,7 @@ export default function Upgrade() {
         <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
           Get more consensus queries and unlock advanced features
         </p>
-        {STRIPE_TEST_MODE && (
+        {stripeConfig?.testMode && (
           <Badge variant="outline" className="mt-4">
             Test Mode - Use card: 4242 4242 4242 4242
           </Badge>

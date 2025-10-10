@@ -12,6 +12,8 @@ export const stripe = process.env.STRIPE_SECRET_KEY
     })
   : null;
 
+export const isStripeTestMode = process.env.STRIPE_SECRET_KEY?.startsWith("sk_test_") || false;
+
 export async function createCheckoutSession(
   userId: number,
   userEmail: string,
@@ -101,8 +103,7 @@ export async function handleWebhook(event: Stripe.Event) {
       }
 
       // Update user with Stripe customer ID and new plan
-      await storage.upsertUser({
-        replitId: user.replitId!,
+      await storage.updateUser(userId, {
         stripeCustomerId: session.customer as string,
         planTier,
         queriesUsed: 0,
@@ -146,8 +147,7 @@ export async function handleWebhook(event: Stripe.Event) {
       // Downgrade to free plan
       const user = await storage.getUser(userId);
       if (user) {
-        await storage.upsertUser({
-          replitId: user.replitId!,
+        await storage.updateUser(userId, {
           planTier: "free",
           queriesUsed: 0,
           quotaRemaining: PLAN_CONFIG.free.queries,

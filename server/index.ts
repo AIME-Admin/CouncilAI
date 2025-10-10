@@ -2,8 +2,18 @@ import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { setupWebSocket } from "./websocket";
+import { securityHeaders, corsConfig } from "./security";
 
 const app = express();
+
+// Apply security headers (only in production)
+if (process.env.NODE_ENV === "production") {
+  app.use(securityHeaders);
+}
+
+// Apply CORS configuration
+app.use(corsConfig);
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 

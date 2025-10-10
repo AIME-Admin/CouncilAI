@@ -19,13 +19,11 @@ export function Footer() {
                 Privacy
               </span>
             </Link>
-            <a 
-              href="mailto:contact@council.ai-me.gr" 
-              className="text-muted-foreground hover:text-foreground transition-colors"
-              data-testid="link-contact"
-            >
-              Contact
-            </a>
+            <Link href="/contact" data-testid="link-contact">
+              <span className="text-muted-foreground hover:text-foreground transition-colors cursor-pointer">
+                Contact
+              </span>
+            </Link>
           </div>
         </div>
       </div>
