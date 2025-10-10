@@ -84,11 +84,11 @@ export default function Contact() {
                   <div>
                     <p className="font-medium">Email</p>
                     <a
-                      href="mailto:support@ai-me.gr"
+                      href="mailto:support@aime.gr"
                       className="text-primary hover:underline"
                       data-testid="link-email"
                     >
-                      support@ai-me.gr
+                      support@aime.gr
                     </a>
                   </div>
                 </div>
