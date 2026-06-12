@@ -4,7 +4,7 @@ import { pgTable, text, serial, varchar, timestamp, jsonb, real, integer, boolea
 import { createInsertSchema } from "drizzle-zod";
 
 // AI Model Types
-export type AIModel = "gpt5" | "claude" | "gemini" | "perplexity";
+export type AIModel = "gpt5" | "claude" | "gemini" | "perplexity" | "grok";
 
 // Claim structure for individual model responses
 export const claimSchema = z.object({
@@ -16,7 +16,7 @@ export type Claim = z.infer<typeof claimSchema>;
 
 // Draft response from each AI model
 export const draftResponseSchema = z.object({
-  agent: z.enum(["gpt5", "claude", "gemini", "perplexity"]),
+  agent: z.enum(["gpt5", "claude", "gemini", "perplexity", "grok"]),
   claims: z.array(claimSchema),
   confidence: z.number().min(0).max(1),
 });
@@ -25,8 +25,8 @@ export type DraftResponse = z.infer<typeof draftResponseSchema>;
 
 // Critique feedback from one model about another
 export const critiqueSchema = z.object({
-  reviewer: z.enum(["gpt5", "claude", "gemini", "perplexity"]),
-  target: z.enum(["gpt5", "claude", "gemini", "perplexity"]),
+  reviewer: z.enum(["gpt5", "claude", "gemini", "perplexity", "grok"]),
+  target: z.enum(["gpt5", "claude", "gemini", "perplexity", "grok"]),
   issues: z.array(z.string()),
 });
 
@@ -35,10 +35,22 @@ export type Critique = z.infer<typeof critiqueSchema>;
 // Dissent point showing disagreement
 export const dissentSchema = z.object({
   point: z.string(),
-  who: z.array(z.enum(["gpt5", "claude", "gemini", "perplexity"])),
+  who: z.array(z.enum(["gpt5", "claude", "gemini", "perplexity", "grok"])),
 });
 
 export type Dissent = z.infer<typeof dissentSchema>;
+
+// Per-model comparison entry in synthesis
+export const modelComparisonSchema = z.object({
+  agent: z.enum(["gpt5", "claude", "gemini", "perplexity", "grok"]),
+  summary: z.string(),
+  confidence: z.number().min(0).max(1),
+  uniqueClaims: z.array(z.string()),
+  agreedClaims: z.array(z.string()),
+  contradictions: z.array(z.string()),
+});
+
+export type ModelComparison = z.infer<typeof modelComparisonSchema>;
 
 // Final synthesis result
 export const synthesisSchema = z.object({
@@ -47,6 +59,7 @@ export const synthesisSchema = z.object({
   citations: z.array(z.string()),
   decision_log: z.array(z.string()),
   dissent: z.array(dissentSchema),
+  modelComparisons: z.array(modelComparisonSchema).optional(),
 });
 
 export type Synthesis = z.infer<typeof synthesisSchema>;
@@ -112,8 +125,8 @@ export const queries = pgTable("queries", {
 export const userPreferences = pgTable("user_preferences", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").references(() => users.id).notNull().unique(),
-  modelWeights: jsonb("model_weights").notNull().default('{"gpt5": 1, "claude": 1, "gemini": 1, "perplexity": 1}'),
-  enabledModels: jsonb("enabled_models").notNull().default('["gpt5", "claude", "gemini", "perplexity"]'),
+  modelWeights: jsonb("model_weights").notNull().default('{"gpt5": 1, "claude": 1, "gemini": 1, "perplexity": 1, "grok": 1}'),
+  enabledModels: jsonb("enabled_models").notNull().default('["gpt5", "claude", "gemini", "perplexity", "grok"]'),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 

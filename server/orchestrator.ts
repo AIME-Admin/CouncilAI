@@ -3,6 +3,7 @@ import * as gpt5 from "./agents/gpt5";
 import * as claude from "./agents/claude";
 import * as gemini from "./agents/gemini";
 import * as perplexity from "./agents/perplexity";
+import * as grok from "./agents/grok";
 import { synthesize } from "./supervisor";
 import { type DraftResponse, type Critique, type AskResponse } from "@shared/schema";
 import { sendStreamMessage } from "./websocket";
@@ -26,14 +27,14 @@ export async function processQuestion(question: string, streamQueryId?: string):
   if (streamQueryId) {
     sendStreamMessage(queryId, {
       type: "draft",
-      phase: "Starting draft collection from 4 AI models...",
+      phase: "Starting draft collection from 5 AI models...",
     });
   }
 
   console.log("[Council] Phase 1: Collecting drafts from all models...");
-  
-  const modelNames = ["gpt5", "claude", "gemini", "perplexity"];
-  const draftFunctions = [gpt5.getDraft, claude.getDraft, gemini.getDraft, perplexity.getDraft];
+
+  const modelNames = ["gpt5", "claude", "gemini", "perplexity", "grok"];
+  const draftFunctions = [gpt5.getDraft, claude.getDraft, gemini.getDraft, perplexity.getDraft, grok.getDraft];
   
   const drafts: DraftResponse[] = [];
   
@@ -75,7 +76,7 @@ export async function processQuestion(question: string, streamQueryId?: string):
     throw new Error("All AI models failed to respond. Please try again later.");
   }
   
-  console.log(`[Council] Drafts collected from ${drafts.length}/4 models.`);
+  console.log(`[Council] Drafts collected from ${drafts.length}/5 models.`);
 
   if (streamQueryId) {
     sendStreamMessage(queryId, {
@@ -100,6 +101,8 @@ export async function processQuestion(question: string, streamQueryId?: string):
           critiquePromise = withTimeout(gemini.getCritique(question, otherDraft.agent, otherDraft), 20000, `${draft.agent}-critique`);
         } else if (draft.agent === "perplexity") {
           critiquePromise = withTimeout(perplexity.getCritique(question, otherDraft.agent, otherDraft), 20000, `${draft.agent}-critique`);
+        } else if (draft.agent === "grok") {
+          critiquePromise = withTimeout(grok.getCritique(question, otherDraft.agent, otherDraft), 20000, `${draft.agent}-critique`);
         } else {
           continue;
         }

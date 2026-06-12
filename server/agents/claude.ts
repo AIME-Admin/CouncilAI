@@ -1,8 +1,8 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { type DraftResponse, type Critique } from "@shared/schema";
 
-// The newest Anthropic model is "claude-sonnet-4-20250514"
-const DEFAULT_MODEL_STR = "claude-sonnet-4-20250514";
+// The newest Anthropic model is "claude-opus-4-5"
+const DEFAULT_MODEL_STR = "claude-opus-4-5";
 
 const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,

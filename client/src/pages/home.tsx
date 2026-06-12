@@ -2,17 +2,18 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
-import { Sparkles, ExternalLink, Check, X, AlertTriangle, Clock, Hash } from "lucide-react";
+import { Sparkles, ExternalLink, Check, X, TriangleAlert as AlertTriangle, Clock, Hash, TrendingUp, TrendingDown, Equal } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
 import { ConfidenceRing } from "@/components/confidence-ring";
 import { ModelAvatar } from "@/components/model-avatar";
 import { LoadingSequence } from "@/components/loading-sequence";
-import { askRequestSchema, type AskRequest, type AskResponse } from "@shared/schema";
+import { askRequestSchema, type AskRequest, type AskResponse, type AIModel } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
 
 export default function Home() {
@@ -161,6 +162,16 @@ export default function Home() {
                   {t.home.answer}
                 </TabsTrigger>
                 <TabsTrigger
+                  value="comparison"
+                  className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent"
+                  data-testid="tab-comparison"
+                >
+                  Model Breakdown
+                  <Badge variant="secondary" className="ml-2">
+                    {(result.drafts ?? []).length}
+                  </Badge>
+                </TabsTrigger>
+                <TabsTrigger
                   value="receipts"
                   className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent"
                   data-testid="tab-receipts"
@@ -274,6 +285,97 @@ export default function Home() {
                     </Card>
                   );
                 })()}
+              </TabsContent>
+
+              <TabsContent value="comparison" className="mt-6 space-y-4">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Per-Model Analysis</CardTitle>
+                    <p className="text-sm text-muted-foreground">
+                      How each council member contributed to the final answer, what they agreed on, and where they diverged.
+                    </p>
+                  </CardHeader>
+                  <CardContent className="space-y-6">
+                    {(result.synthesis?.modelComparisons ?? []).length === 0 ? (
+                      <p className="text-sm text-muted-foreground text-center py-8">No comparison data available.</p>
+                    ) : (
+                      (result.synthesis?.modelComparisons ?? []).map((mc) => (
+                        <div key={mc.agent} className="border rounded-lg p-4 space-y-4" data-testid={`comparison-${mc.agent}`}>
+                          <div className="flex items-center justify-between gap-4 flex-wrap">
+                            <div className="flex items-center gap-3">
+                              <ModelAvatar model={mc.agent as AIModel} size="md" active />
+                              <div>
+                                <p className="font-semibold text-foreground capitalize">{mc.agent === "gpt5" ? "GPT-o3" : mc.agent.charAt(0).toUpperCase() + mc.agent.slice(1)}</p>
+                                <p className="text-xs text-muted-foreground">{mc.summary}</p>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2 min-w-[120px]">
+                              <span className="text-xs text-muted-foreground w-16 text-right">{(mc.confidence * 100).toFixed(0)}%</span>
+                              <Progress value={mc.confidence * 100} className="w-24 h-2" />
+                            </div>
+                          </div>
+
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                            {mc.agreedClaims.length > 0 && (
+                              <div className="space-y-2">
+                                <div className="flex items-center gap-1.5 text-xs font-semibold text-chart-2">
+                                  <Check className="w-3.5 h-3.5" />
+                                  Agreed Claims ({mc.agreedClaims.length})
+                                </div>
+                                <ul className="space-y-1">
+                                  {mc.agreedClaims.map((claim, i) => (
+                                    <li key={i} className="text-xs text-muted-foreground bg-chart-2/5 rounded px-2 py-1 leading-snug">
+                                      {claim.length > 120 ? claim.slice(0, 120) + "…" : claim}
+                                    </li>
+                                  ))}
+                                </ul>
+                              </div>
+                            )}
+
+                            {mc.uniqueClaims.length > 0 && (
+                              <div className="space-y-2">
+                                <div className="flex items-center gap-1.5 text-xs font-semibold text-chart-1">
+                                  <TrendingUp className="w-3.5 h-3.5" />
+                                  Unique Claims ({mc.uniqueClaims.length})
+                                </div>
+                                <ul className="space-y-1">
+                                  {mc.uniqueClaims.map((claim, i) => (
+                                    <li key={i} className="text-xs text-muted-foreground bg-chart-1/5 rounded px-2 py-1 leading-snug">
+                                      {claim.length > 120 ? claim.slice(0, 120) + "…" : claim}
+                                    </li>
+                                  ))}
+                                </ul>
+                              </div>
+                            )}
+
+                            {mc.contradictions.length > 0 && (
+                              <div className="space-y-2">
+                                <div className="flex items-center gap-1.5 text-xs font-semibold text-destructive">
+                                  <TrendingDown className="w-3.5 h-3.5" />
+                                  Issues Raised ({mc.contradictions.length})
+                                </div>
+                                <ul className="space-y-1">
+                                  {mc.contradictions.map((issue, i) => (
+                                    <li key={i} className="text-xs text-muted-foreground bg-destructive/5 rounded px-2 py-1 leading-snug">
+                                      {issue.length > 120 ? issue.slice(0, 120) + "…" : issue}
+                                    </li>
+                                  ))}
+                                </ul>
+                              </div>
+                            )}
+
+                            {mc.agreedClaims.length === 0 && mc.uniqueClaims.length === 0 && mc.contradictions.length === 0 && (
+                              <div className="col-span-3 flex items-center gap-2 text-xs text-muted-foreground py-2">
+                                <Equal className="w-3.5 h-3.5" />
+                                This model's claims did not pass the consensus threshold.
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </CardContent>
+                </Card>
               </TabsContent>
 
               <TabsContent value="receipts" className="mt-6 space-y-6">
