@@ -7,12 +7,15 @@ const grok = new OpenAI({
   baseURL: "https://api.x.ai/v1",
 });
 
+// grok-4.3 is xAI's latest flagship model with agentic tool calling (April 2026)
+const MODEL = "grok-4.3";
+
 export async function getDraft(question: string): Promise<DraftResponse> {
   console.log("[Grok] Generating draft...");
 
   try {
     const response = await grok.chat.completions.create({
-      model: "grok-3",
+      model: MODEL,
       messages: [
         {
           role: "system",
@@ -24,17 +27,13 @@ Format your response as JSON with:
 }
 Be precise and cite real sources where possible.`,
         },
-        {
-          role: "user",
-          content: question,
-        },
+        { role: "user", content: question },
       ],
       response_format: { type: "json_object" },
       max_tokens: 4096,
     });
 
     const result = JSON.parse(response.choices[0].message.content || "{}");
-
     return {
       agent: "grok",
       claims: result.claims || [],
@@ -55,7 +54,7 @@ export async function getCritique(
 
   try {
     const response = await grok.chat.completions.create({
-      model: "grok-3",
+      model: MODEL,
       messages: [
         {
           role: "system",
@@ -72,7 +71,6 @@ Respond with JSON: {"issues": ["issue 1", "issue 2", ...]}`,
     });
 
     const result = JSON.parse(response.choices[0].message.content || "{}");
-
     return {
       reviewer: "grok",
       target: targetAgent as any,
@@ -80,10 +78,6 @@ Respond with JSON: {"issues": ["issue 1", "issue 2", ...]}`,
     };
   } catch (error) {
     console.error("[Grok] Critique error:", error);
-    return {
-      reviewer: "grok",
-      target: targetAgent as any,
-      issues: [],
-    };
+    return { reviewer: "grok", target: targetAgent as any, issues: [] };
   }
 }

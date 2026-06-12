@@ -4,12 +4,17 @@ import { type DraftResponse, type Critique } from "@shared/schema";
 // Note that the newest Gemini model series is "gemini-2.5-flash" or "gemini-2.5-pro"
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || "" });
 
+// gemini-3.5-flash is Google's latest stable frontier model (May 2026, Google I/O)
+const DRAFT_MODEL = "gemini-3.5-flash";
+// gemini-2.5-flash for critiques — proven stable, lower cost
+const CRITIQUE_MODEL = "gemini-2.5-flash";
+
 export async function getDraft(question: string): Promise<DraftResponse> {
   console.log("[Gemini] Generating draft...");
   
   try {
     const response = await ai.models.generateContent({
-      model: "gemini-2.5-pro",
+      model: DRAFT_MODEL,
       config: {
         systemInstruction: `You are a fact-checking AI. Provide a structured answer with specific claims supported by credible sources. 
 Respond with JSON in this format:
@@ -63,7 +68,7 @@ export async function getCritique(
   
   try {
     const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
+      model: CRITIQUE_MODEL,
       config: {
         systemInstruction: `You are reviewing another AI's answer. Identify any factual errors, logical inconsistencies, or unsupported claims.
 Respond with JSON: {"issues": ["issue 1", "issue 2", ...]}`,
