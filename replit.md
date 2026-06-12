@@ -1,23 +1,26 @@
 # Council - AI Consensus Engine
 
 ## Overview
-Council is a four-LLM consensus engine that queries GPT-5, Claude, Gemini, and Perplexity, performs cross-critique analysis, and returns one synthesized, auditable answer with citations and confidence scoring.
+Council is a five-model consensus engine that queries GPT-5.5, Claude Fable 5, Gemini 3.5 Flash, Perplexity Sonar Reasoning Pro, and Grok 4.3. It performs cross-critique analysis and returns one synthesized, auditable answer with citations, confidence scoring, and a per-model comparison breakdown.
 
 ## Project Architecture
 
 ### Tech Stack
 - **Frontend**: React + TypeScript, Wouter (routing), TanStack Query, Tailwind CSS
 - **Backend**: Express.js, TypeScript
-- **AI Models**: GPT-5 (OpenAI), Claude (Anthropic), Gemini (Google), Perplexity
+- **Database**: PostgreSQL (Neon serverless) via Drizzle ORM
+- **AI Models**: GPT-5.5 (OpenAI), Claude Fable 5 (Anthropic), Gemini 3.5 Flash (Google), Perplexity Sonar Reasoning Pro, Grok 4.3 (xAI)
 
 ### Core Features
 1. **Question Input**: Users ask questions through a gradient-focused textarea
 2. **Consensus Pipeline**:
-   - **Draft Phase**: All 4 models generate structured responses with claims and confidence scores
+   - **Draft Phase**: All 5 models generate structured responses with claims and confidence scores
    - **Cross-Critique Phase**: Each model reviews others' drafts and flags issues
    - **Synthesis Phase**: Supervisor merges drafts, weighs agreement, and creates final answer
+   - **Model Comparison Layer**: Per-model breakdown of agreed, unique, and contradicted claims
 3. **Results Display**:
    - **Answer Tab**: Final summary, confidence ring visualization, model agreement indicators
+   - **Model Breakdown Tab**: Per-model cards with confidence bars and claim diff analysis
    - **Receipts Tab**: Decision log showing what claims were kept/dropped, all citations
    - **Dissent Tab**: Points of disagreement among models
 4. **Metadata**: Processing time, query ID, timestamp
@@ -28,7 +31,7 @@ Council is a four-LLM consensus engine that queries GPT-5, Claude, Gemini, and P
 Each AI model returns:
 ```typescript
 {
-  agent: "gpt5" | "claude" | "gemini" | "perplexity",
+  agent: "gpt5" | "claude" | "gemini" | "perplexity" | "grok",
   claims: [{ text: string, support: string[] }],
   confidence: number (0-1)
 }
@@ -51,7 +54,15 @@ Models review each other:
   confidence: number (0-1),
   citations: string[],
   decision_log: string[],
-  dissent: [{ point: string, who: AIModel[] }]
+  dissent: [{ point: string, who: AIModel[] }],
+  modelComparisons: [{
+    agent: AIModel,
+    summary: string,
+    confidence: number,
+    uniqueClaims: string[],
+    agreedClaims: string[],
+    contradictions: string[]
+  }]
 }
 ```
 
@@ -60,9 +71,7 @@ Models review each other:
 ### POST /api/ask
 Request:
 ```json
-{
-  "question": "string"
-}
+{ "question": "string" }
 ```
 
 Response:
@@ -76,6 +85,16 @@ Response:
   "query_id": "uuid"
 }
 ```
+
+## Model Versions (as of June 2026)
+
+| Agent | Model ID | Provider |
+|-------|----------|----------|
+| gpt5 | `gpt-5.5` | OpenAI |
+| claude | `claude-fable-5` (draft), `claude-sonnet-4-6` (critique) | Anthropic |
+| gemini | `gemini-3.5-flash` (draft), `gemini-2.5-flash` (critique) | Google |
+| perplexity | `sonar-reasoning-pro` | Perplexity |
+| grok | `grok-4.3` | xAI |
 
 ## Design System
 
@@ -94,34 +113,26 @@ Response:
 
 ### Components
 - **Confidence Ring**: Animated circular progress with color-coded glow
-- **Model Avatars**: Geometric icons (circles for GPT-5, triangle for Claude, diamond for Gemini, hexagon for Perplexity)
-- **Loading Sequence**: Sequential AI model activation with phase indicators
+- **Model Avatars**: Geometric icons per provider
+- **Loading Sequence**: Sequential AI model activation (5 models) with phase indicators
 - **Tabs**: Horizontal navigation with sliding primary border indicator
 
-## Recent Changes
-- **2025-01-04**: Complete MVP + Next Phase Features
-  - **Core MVP**: Full consensus engine with 4 AI models, cross-critique, and synthesis
-  - **WebSocket Streaming**: Real-time progress updates with message buffering
-  - **Database & Caching**: PostgreSQL with SHA-256-based query caching
-  - **Auth Integration**: Replit Auth + Local auth with sessions (fully implemented)
-  - **Production Ready**: Rate limiting, security headers, CORS, error boundaries, legal pages
-  - **Contact Form**: Support page with contact_messages table (requires db:push for production)
-  
-- **DEPLOYMENT NOTE**: Before production deploy, run `npm run db:push --force` to sync:
-  - contact_messages table (for contact form)
-  - Any schema updates to existing tables
-  - This ensures all database changes are properly migrated
-
 ## Environment Variables
-- `OPENAI_API_KEY`: GPT-5 access
-- `ANTHROPIC_API_KEY`: Claude access
-- `GEMINI_API_KEY`: Gemini access
-- `PERPLEXITY_API_KEY`: Perplexity access
+- `OPENAI_API_KEY`: GPT-5.5 access
+- `ANTHROPIC_API_KEY`: Claude Fable 5 access
+- `GEMINI_API_KEY`: Gemini 3.5 Flash access
+- `PERPLEXITY_API_KEY`: Perplexity Sonar access
+- `XAI_API_KEY`: Grok 4.3 access
+- `DATABASE_URL`: PostgreSQL connection string
 - `SESSION_SECRET`: Express session secret
+- `STRIPE_SECRET_KEY`: Stripe payments
+- `STRIPE_WEBHOOK_SECRET`: Stripe webhook verification
 
 ## Development
 ```bash
-npm run dev  # Starts both frontend and backend
+npm run dev   # Starts both frontend and backend
+npm run build # Production build
+npm run db:push # Sync database schema
 ```
 
 ## File Structure
@@ -129,13 +140,20 @@ npm run dev  # Starts both frontend and backend
 client/src/
   components/
     confidence-ring.tsx    # Animated confidence visualization
-    model-avatar.tsx       # AI model icons
-    loading-sequence.tsx   # Loading animation
+    model-avatar.tsx       # AI model icons (gpt5, claude, gemini, perplexity, grok)
+    loading-sequence.tsx   # Loading animation (5-model sequence)
   pages/
-    home.tsx              # Main question/answer interface
+    home.tsx              # Main question/answer interface with model breakdown tab
 server/
-  agents/                 # AI model adapters (to be implemented)
-  routes.ts              # API endpoints
+  agents/                 # AI model adapters
+    claude.ts             # claude-fable-5 / claude-sonnet-4-6
+    gemini.ts             # gemini-3.5-flash / gemini-2.5-flash
+    gpt5.ts               # gpt-5.5
+    perplexity.ts         # sonar-reasoning-pro
+    grok.ts               # grok-4.3
+  orchestrator.ts         # 3-phase pipeline (draft → critique → synthesis)
+  supervisor.ts           # Synthesis + model comparison layer
+  routes.ts               # API endpoints
 shared/
-  schema.ts              # Type definitions and validation
+  schema.ts               # Type definitions, Zod schemas, DB tables
 ```

@@ -11,20 +11,20 @@ import { PLAN_CONFIG } from "@shared/schema";
 const PLAN_FEATURES = {
   free: [
     "3 consensus queries per month",
-    "Access to all 4 AI models",
+    "Access to all 5 AI models",
     "Basic query history",
     "Standard support",
   ],
   basic: [
     "100 consensus queries per month",
-    "Access to all 4 AI models",
+    "Access to all 5 AI models",
     "Full query history",
     "Export to JSON/Markdown",
     "Priority support",
   ],
   pro: [
     "500 consensus queries per month",
-    "Access to all 4 AI models",
+    "Access to all 5 AI models",
     "Full query history & analytics",
     "Export to JSON/Markdown",
     "Model weight customization",
@@ -33,7 +33,7 @@ const PLAN_FEATURES = {
   ],
   team: [
     "2000 consensus queries per month",
-    "Access to all 4 AI models",
+    "Access to all 5 AI models",
     "Full query history & analytics",
     "Export to JSON/Markdown",
     "Model weight customization",
@@ -177,7 +177,7 @@ export default function Upgrade() {
       </div>
 
       <div className="mt-12 text-center text-sm text-muted-foreground">
-        <p>All plans include access to GPT-5, Claude, Gemini, and Perplexity models</p>
+        <p>All plans include access to GPT-5.5, Claude Fable 5, Gemini 3.5 Flash, Perplexity Sonar, and Grok 4.3</p>
         <p className="mt-2">Prices in EUR • Cancel anytime • Secure payment via Stripe</p>
       </div>
     </div>

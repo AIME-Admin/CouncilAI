@@ -6,7 +6,7 @@ export function Footer() {
       <div className="container mx-auto px-4 py-6">
         <div className="flex flex-col md:flex-row justify-between items-center gap-4">
           <div className="text-sm text-muted-foreground">
-            © {new Date().getFullYear()} Council. Four Minds, One Verifiable Answer.
+            © {new Date().getFullYear()} Council. Five Minds, One Verifiable Answer.
           </div>
           <div className="flex gap-6 text-sm">
             <Link href="/terms" data-testid="link-terms">

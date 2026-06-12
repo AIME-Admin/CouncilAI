@@ -3,7 +3,7 @@ import { ModelAvatar } from "./model-avatar";
 import { type AIModel } from "@shared/schema";
 
 const phases = [
-  { id: "draft", label: "Querying AI models", models: ["gpt5", "claude", "gemini", "perplexity"] as AIModel[] },
+  { id: "draft", label: "Querying AI models", models: ["gpt5", "claude", "gemini", "perplexity", "grok"] as AIModel[] },
   { id: "critique", label: "Cross-critique in progress", models: [] },
   { id: "synthesis", label: "Synthesizing consensus", models: [] },
 ];
@@ -15,12 +15,12 @@ export function LoadingSequence() {
   useEffect(() => {
     if (currentPhase === 0) {
       const modelTimer = setInterval(() => {
-        setActiveModel((prev) => (prev + 1) % 4);
+        setActiveModel((prev) => (prev + 1) % 5);
       }, 800);
       
       const phaseTimer = setTimeout(() => {
         setCurrentPhase(1);
-      }, 3200);
+      }, 4000);
 
       return () => {
         clearInterval(modelTimer);

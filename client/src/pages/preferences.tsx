@@ -13,10 +13,11 @@ import { Skeleton } from "@/components/ui/skeleton";
 import type { UserPreferences } from "@shared/schema";
 
 const MODELS = [
-  { id: "gpt5", name: "GPT-5", description: "OpenAI's latest model" },
-  { id: "claude", name: "Claude", description: "Anthropic's advanced AI" },
-  { id: "gemini", name: "Gemini", description: "Google's multimodal model" },
-  { id: "perplexity", name: "Perplexity", description: "Real-time web search" },
+  { id: "gpt5", name: "GPT-5.5", description: "OpenAI's latest flagship model" },
+  { id: "claude", name: "Claude Fable 5", description: "Anthropic's most capable widely released model" },
+  { id: "gemini", name: "Gemini 3.5 Flash", description: "Google's latest stable frontier model" },
+  { id: "perplexity", name: "Perplexity Sonar", description: "Real-time web search with citations" },
+  { id: "grok", name: "Grok 4.3", description: "xAI's flagship with agentic reasoning" },
 ];
 
 export default function Preferences() {
@@ -28,13 +29,15 @@ export default function Preferences() {
     claude: 1,
     gemini: 1,
     perplexity: 1,
+    grok: 1,
   });
-  
+
   const [enabledModels, setEnabledModels] = useState<string[]>([
     "gpt5",
     "claude",
     "gemini",
     "perplexity",
+    "grok",
   ]);
 
   const { data: preferences, isLoading, error } = useQuery<UserPreferences>({
@@ -101,7 +104,7 @@ export default function Preferences() {
             <Skeleton className="h-6 w-32" />
           </CardHeader>
           <CardContent className="space-y-6">
-            {[1, 2, 3, 4].map((i) => (
+            {[1, 2, 3, 4, 5].map((i) => (
               <Skeleton key={i} className="h-20 w-full" />
             ))}
           </CardContent>
